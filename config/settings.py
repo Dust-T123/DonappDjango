@@ -131,3 +131,7 @@ MAILERS = {
 }
 
 AUTH_USER_MODEL = 'core.Usuario'
+LANGUAGE_CODE = 'es-co'
+TIME_ZONE = 'America/Bogota'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
