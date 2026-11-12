@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Donapp{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'assets/uploads/Icon.png' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+
+    <!-- Mensajes de éxito (Equivalente a session('success') de Laravel usando SweetAlert2) -->
+    {% if messages %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% for message in messages %}
+    <script>
+        Swal.fire({
+            icon: "{{ message.tags }}" === "error" ? "error" : "success",
+            title: "{{ message.tags }}" === "error" ? "Error" : "¡Éxito!",
+            text: "{{ message|escapejs }}",
+            confirmButtonColor: '#0B5AA6',
+            confirmButtonText: 'ACEPTAR',
+            customClass: { popup: 'donapp-popup', confirmButton: 'donapp-confirm-btn' }
+        });
+    </script>
+    {% endfor %}
+    {% endif %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

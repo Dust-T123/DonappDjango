@@ -78,8 +78,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Se cambia SQLite por la configuración de MySQL vinculada al .env
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'Donapp',       
+        'USER': 'postgres',      
+        'PASSWORD': '12345', 
+        'HOST': 'localhost',       
+        'PORT': '5432',             
     }
 }
 
@@ -129,6 +133,8 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'core.Usuario'
 LANGUAGE_CODE = 'es-co'
