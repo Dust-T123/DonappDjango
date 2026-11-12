@@ -118,16 +118,23 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── Correo ───────────────────────────────────────────────────────────────────
+# ── Correo (Django 6.1: MAILERS reemplaza a los EMAIL_* obsoletos) ───────────
 # Por defecto los correos se imprimen en la consola (útil en desarrollo).
-# En producción define EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-# y las variables EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD.
-EMAIL_BACKEND = env(
+# Para enviar de verdad, en el .env pon:
+#   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+#   EMAIL_HOST=smtp.gmail.com
+#   EMAIL_HOST_USER=...   EMAIL_HOST_PASSWORD=...   (EMAIL_PORT y EMAIL_USE_TLS opcionales)
+_email_backend = env(
     'EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend'
 )
-EMAIL_HOST = env('EMAIL_HOST', default='')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+MAILERS = {'default': {'BACKEND': _email_backend}}
+if _email_backend.endswith('smtp.EmailBackend'):
+    MAILERS['default']['OPTIONS'] = {
+        'host': env('EMAIL_HOST'),
+        'port': env.int('EMAIL_PORT', default=587),
+        'use_tls': env.bool('EMAIL_USE_TLS', default=True),
+        'username': env('EMAIL_HOST_USER', default=''),
+        'password': env('EMAIL_HOST_PASSWORD', default=''),
+    }
+
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Donapp <no-reply@donapp.local>')
