@@ -15,9 +15,11 @@ ESTADOS_USUARIO = opciones('activo', 'inactivo')
 ROLES = opciones('donante', 'asistente', 'administrador')
 ESTADOS_EVENTO = opciones('borrador', 'publicado', 'en_curso', 'finalizado', 'cancelado')
 ESTADOS_DONACION = opciones('pendiente', 'aprobada', 'cancelada', 'completada', 'rechazada')
+ESTADOS_SOLICITUD = opciones('pendiente', 'aprobada', 'rechazada', 'cancelada', 'completada')
 ESTADOS_VISITA = opciones('pendiente', 'aprobada', 'rechazada', 'realizada', 'cancelada')
 ESTADOS_CORRECCION = opciones('pendiente', 'aprobada', 'rechazada')
-CAMPOS_CORRECCION = opciones('nombre', 'apellido', 'tipo_documento', 'num_documento', 'fecha_nacimiento')
+# Mismos valores que el enum campo_correccion de la base de datos original.
+CAMPOS_CORRECCION = opciones('nombre', 'apellido', 'tipoDocumento', 'numDocumento', 'fechaNacimiento')
 
 LUGAR_ENTREGA = 'Transversal 73 H Bis #75B 46 Sur, Barrio Sierra Morena V Sector'
 
@@ -76,6 +78,19 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             )
         ]
 
+    def clean(self):
+        super().clean()
+        if isinstance(self.fecha_nacimiento, date):
+            validar_edad_minima(self.fecha_nacimiento)
+        if self.rol != 'donante' and (self.necesidad or self.prioridad):
+            raise ValidationError('Solo los donantes pueden tener necesidad o prioridad.')
+
+    def save(self, *args, **kwargs):
+        # El trigger de PostgreSQL ya no existe: la regla de los 14 años y la de
+        # necesidad/prioridad se validan aquí en cada guardado.
+        self.clean()
+        super().save(*args, **kwargs)
+
     @property
     def is_active(self):
         return self.estado == 'activo'
@@ -112,6 +127,18 @@ class Evento(models.Model):
     lugar = models.CharField(max_length=255, null=True, blank=True, default=LUGAR_ENTREGA)
     estado = models.CharField(max_length=15, choices=ESTADOS_EVENTO, default='borrador')
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(fecha_inicio__isnull=True)
+                    | models.Q(fecha_fin__isnull=True)
+                    | models.Q(fecha_fin__gte=models.F('fecha_inicio'))
+                ),
+                name='chk_evento_rango_fechas',
+            )
+        ]
+
     def __str__(self):
         return self.nombre
 
@@ -129,6 +156,12 @@ class Donacion(models.Model):
 
     class Meta:
         verbose_name_plural = 'donaciones'
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(stock__gte=0),
+                name='chk_donacion_stock_no_negativo',
+            )
+        ]
 
     def __str__(self):
         return self.descripcion
@@ -136,7 +169,7 @@ class Donacion(models.Model):
 
 class Solicitud(models.Model):
     descripcion = models.CharField(max_length=300)
-    estado = models.CharField(max_length=15, choices=ESTADOS_DONACION, default='pendiente')
+    estado = models.CharField(max_length=15, choices=ESTADOS_SOLICITUD, default='pendiente')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     observacion = models.CharField(max_length=300, null=True, blank=True)
     solicitante = models.ForeignKey(

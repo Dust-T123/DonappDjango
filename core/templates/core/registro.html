@@ -1,0 +1,175 @@
+{% extends 'core/layouts/app.html' %}
+{% load static %}
+{% block title %}Registro | Donapp{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'assets/css/StylesRegistrar.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="caja-exterior">
+    <a href="{% url 'index' %}" class="logo-container">
+        <img src="{% static 'assets/uploads/Red-Logo.png' %}" alt="Logo Donapp" class="form-logo">
+    </a>
+
+    <h2>Crea tu cuenta</h2>
+    <p class="subtitle">Completa los datos para registrarte en el sistema</p>
+
+    <form action="{% url 'registro' %}" method="POST" class="form-grid" id="registerForm">
+        {% csrf_token %}
+
+        <div class="input-group">
+            <label for="nombre"><i class="fa-solid fa-user"></i> Nombre</label>
+            <input type="text" name="nombre" id="nombre"
+                   placeholder="Escribe aquí tu nombre"
+                   required minlength="3" maxlength="100" onkeypress="return soloLetras(event)">
+        </div>
+
+        <div class="input-group">
+            <label for="apellido"><i class="fa-solid fa-user"></i> Apellido</label>
+            <input type="text" name="apellido" id="apellido"
+                   placeholder="Escribe aquí tu apellido"
+                   required minlength="2" maxlength="100" onkeypress="return soloLetras(event)">
+        </div>
+
+        <div class="input-group">
+            <label for="tipo_doc"><i class="fa-solid fa-id-card"></i> Tipo de Documento</label>
+            <select name="tipoDocumento" id="tipo_doc" required>
+                <option value="" disabled selected>Selecciona tu tipo de documento</option>
+                <option value="CC">Cédula de Ciudadanía</option>
+                <option value="TI">Tarjeta de Identidad</option>
+                <option value="CE">Cédula de Extranjería</option>
+                <option value="TE">Tarjeta de Extranjería</option>
+                <option value="PPT">Permiso por Protección Temporal</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="numero_doc"><i class="fa-solid fa-hashtag"></i> Número de Documento</label>
+            <input type="text" name="numDocumento" id="numero_doc"
+                   placeholder="Digita tu número de documento"
+                   required minlength="4" maxlength="15" pattern="[A-Za-z0-9]{4,15}"
+                   onkeypress="return soloAlfanumerico(event)">
+        </div>
+
+        <div class="input-group">
+            <label for="fecha_nac"><i class="fa-solid fa-calendar-days"></i> Fecha de Nacimiento</label>
+            <input type="date" name="fechaNacimiento" id="fecha_nac" required min="1920-01-01">
+            <p class="form-hint" style="font-size:0.78rem;color:var(--text-muted,#777);margin-top:4px">Debes tener al menos 14 años para registrarte.</p>
+        </div>
+
+        <div class="input-group">
+            <label for="email"><i class="fa-solid fa-envelope"></i> Correo Electrónico</label>
+            <input type="email" name="email" id="email"
+                   placeholder="Escribe tu correo electrónico personal"
+                   required maxlength="150">
+        </div>
+
+        <div class="input-group">
+            <label for="telefono"><i class="fa-solid fa-phone"></i> Teléfono o Celular</label>
+            <input type="text" name="telefono" id="telefono"
+                   placeholder="Digita tus 10 números de teléfono"
+                   required maxlength="10" onkeypress="return soloNumeros(event)">
+        </div>
+
+        <div class="input-group">
+            <label for="password"><i class="fa-solid fa-lock"></i> Contraseña (Máximo 30)</label>
+            <div class="password-wrapper">
+                <input type="password" name="password" id="password"
+                       placeholder="Crea una clave de máximo 30 caracteres"
+                       required minlength="6" maxlength="30">
+                <button type="button" class="eye-btn" onclick="togglePass('password','eye1')">
+                    <i class="fa-solid fa-eye" id="eye1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="confirm_password"><i class="fa-solid fa-shield-halved"></i> Repite tu Contraseña</label>
+            <div class="password-wrapper">
+                <input type="password" name="password_confirmation" id="confirm_password"
+                       placeholder="Escribe la misma clave nuevamente"
+                       required maxlength="30">
+                <button type="button" class="eye-btn" onclick="togglePass('confirm_password','eye2')">
+                    <i class="fa-solid fa-eye" id="eye2"></i>
+                </button>
+            </div>
+            <span id="error-pass" class="error-msg">¡Las contraseñas no coinciden!</span>
+        </div>
+
+        <div class="input-group full-width">
+            <label for="direccion"><i class="fa-solid fa-location-dot"></i> Dirección de Residencia</label>
+            <input type="text" name="direccion" id="direccion"
+                   placeholder="Escribe tu dirección actual de vivienda"
+                   required maxlength="255">
+        </div>
+
+        <div class="input-group full-width">
+            <label for="necesidad"><i class="fa-solid fa-hand-holding-heart"></i> ¿En qué podemos ayudarte? (Máximo 255 caracteres)</label>
+            <textarea name="necesidad" id="necesidad" rows="2"
+                      placeholder="Cuéntanos brevemente si necesitas algún apoyo especial"
+                      maxlength="255"></textarea>
+        </div>
+
+        <div class="input-group full-width terminos-check">
+            <label class="checkbox-label">
+                <input type="checkbox" name="aceptaTerminos" id="aceptaTerminos" required>
+                <span>
+                    He leído y acepto los
+                    <a href="{% url 'terminos' %}" target="_blank" rel="noopener">Términos y Condiciones</a>
+                    y la Política de Habeas Data de Donapp.
+                </span>
+            </label>
+        </div>
+
+        <button type="submit" class="boton-moderno full-width">
+            <span>Registrarse ahora</span>
+            <i class="fa-solid fa-user-plus"></i>
+        </button>
+
+        <div class="auth-links full-width">
+            <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+            <p class="asistido-txt">¿Necesitas ayuda? <a href="javascript:void(0)" onclick="abrirAsistido()">Usa el Registro Asistido</a></p>
+        </div>
+    </form>
+</div>
+
+{# Modal Registro Asistido #}
+<div id="modalAsistido" class="modal-asistido">
+    <div class="modal-content">
+        <span class="close-btn" onclick="cerrarAsistido()">&times;</span>
+        <h3><i class="fa-solid fa-circle-info"></i> Registro Asistido</h3>
+        <p class="text-muted">Si presentas dificultades con el formulario digital, nuestro equipo te ayudará a completar tu registro de forma presencial.</p>
+        <ul class="lista-asistencia">
+            <li><i class="fa-solid fa-map-location-dot"></i>
+                <div><strong>Ubicación:</strong><br>Transversal 73 H Bis #75B 46 SUR, Ciudad Bolívar.</div></li>
+            <li><i class="fa-solid fa-id-badge"></i>
+                <div><strong>Atención personalizada:</strong><br>Un administrador o asistente gestionará tus datos en el sistema.</div></li>
+            <li><i class="fa-solid fa-file-invoice"></i>
+                <div><strong>Requisito obligatorio:</strong><br>Presentar documento de identidad original.</div></li>
+        </ul>
+        <div class="horarios-box">
+            <h4><i class="fa-regular fa-clock"></i> Horarios de Atención</h4>
+            <p><strong>Lunes a Viernes:</strong> 7:00 AM – 5:00 PM</p>
+            <p><strong>Sábados:</strong> 7:00 AM – 12:00 PM</p>
+        </div>
+
+        <div class="descargas-box">
+            <h4><i class="fa-solid fa-file-arrow-down"></i> Formatos para diligenciar antes de tu visita</h4>
+            <a class="btn-descarga" href="{% static 'assets/docs/AutorizacionTratamientoDatosDonapp.docx' %}" download>
+                <i class="fa-solid fa-file-word"></i>
+                <span>Autorización de tratamiento de datos<br><small>Registro propio, presencial</small></span>
+            </a>
+            <a class="btn-descarga" href="{% static 'assets/docs/AutorizacionRegistroDonapp.docx' %}" download>
+                <i class="fa-solid fa-file-word"></i>
+                <span>Autorización por tercero<br><small>Cuando alguien más te representa</small></span>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'assets/js/registro.js' %}"></script>
+{% endblock %}

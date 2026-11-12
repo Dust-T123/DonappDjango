@@ -1,0 +1,11 @@
+{% autoescape off %}Hola, {{ user.nombre }}
+
+Recibimos una solicitud para restablecer tu contraseña en Donapp.
+Abre este enlace (válido por 1 hora):
+
+{{ protocol }}://{{ domain }}{% url 'restablecer' uidb64=uid token=token %}
+
+Si no solicitaste este cambio, ignora este mensaje.
+
+Equipo Donapp
+{% endautoescape %}
