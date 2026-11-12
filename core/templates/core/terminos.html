@@ -1,0 +1,516 @@
+{% extends 'core/layouts/app.html' %}
+{% load static %}
+{% block title %}Términos y Condiciones – Donapp{% endblock %}
+{% block styles %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'assets/css/terminos.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    {# ═══════════════ HEADER ═══════════════ #}
+    <header class="tc-header">
+        <img id="headerLogo"
+             src="{% static 'assets/uploads/White-Logo.png' %}"
+             alt="Donapp"
+             class="tc-header-logo">
+        <span id="headerFallback" class="tc-header-fallback">DONAPP</span>
+        <a href="{% url 'index' %}" class="tc-back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+        </a>
+    </header>
+
+    {# ═══════════════ ÍNDICE DE NAVEGACIÓN ═══════════════ #}
+    <nav class="tc-index-bar" aria-label="Índice de secciones">
+        <div class="tc-index-inner">
+            <a href="#sec-1">1. Objeto</a>
+            <a href="#sec-2">2. Habeas Data</a>
+            <a href="#sec-3">3. Datos recopilados</a>
+            <a href="#sec-4">4. Derechos ARCO</a>
+            <a href="#sec-5">5. Uso de datos</a>
+            <a href="#sec-6">6. Seguridad</a>
+            <a href="#sec-7">7. Donaciones</a>
+            <a href="#sec-8">8. Roles</a>
+            <a href="#sec-9">9. Menores</a>
+            <a href="#sec-10">10. Cookies</a>
+            <a href="#sec-11">11. Cambios</a>
+            <a href="#sec-12">12. Contacto</a>
+        </div>
+    </nav>
+
+    {# ═══════════════ HERO ═══════════════ #}
+    <div class="tc-hero">
+        <span class="tc-hero-eyebrow">
+            <i class="fa-solid fa-shield-halved"></i> &nbsp;Documento legal
+        </span>
+        <h1>Términos y Condiciones</h1>
+        <p>Lee detenidamente este documento antes de usar la plataforma Donapp. Al registrarte o usar nuestros servicios, aceptas las condiciones aquí descritas.</p>
+        <div class="tc-meta">
+            <span><i class="fa-regular fa-calendar"></i> Vigente desde el 1 de junio de 2026</span>
+            <span><i class="fa-solid fa-rotate"></i> Última actualización: junio 2026</span>
+            <span><i class="fa-solid fa-location-dot"></i> Bogotá D.C., Colombia</span>
+        </div>
+    </div>
+
+    {# ═══════════════ CUERPO PRINCIPAL ═══════════════ #}
+    <main class="tc-body">
+
+        {# 1. OBJETO Y ACEPTACIÓN #}
+        <section class="tc-section" id="sec-1">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-file-contract"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 1</span>
+                    <h2 class="tc-section-title">Objeto y Aceptación</h2>
+                </div>
+            </div>
+            <p>Los presentes Términos y Condiciones regulan el acceso y uso de <strong>Donapp</strong>, plataforma digital administrada por la <strong>Corporación Educativa y Social WALDORF</strong>, ubicada en Transversal 73 H Bis # 75B – 46 Sur, Sierra Morena V Sector, Ciudad Bolívar, Bogotá D.C., Colombia.</p>
+            <p>El uso de la plataforma implica la aceptación plena y sin reservas de todos y cada uno de los términos aquí descritos. Si no estás de acuerdo con alguna de estas condiciones, debes abstenerte de utilizar los servicios de Donapp.</p>
+            <div class="tc-highlight">
+                <strong><i class="fa-solid fa-circle-info"></i> &nbsp;¿Para qué sirve Donapp?</strong>
+                Donapp es una plataforma de gestión de donaciones que conecta donantes con solicitantes de ayuda en la comunidad de Ciudad Bolívar. Permite publicar, solicitar y coordinar donaciones de bienes y recursos para eventos solidarios.
+            </div>
+        </section>
+
+        {# 2. HABEAS DATA Y LEY 1581 #}
+        <section class="tc-section" id="sec-2">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 2</span>
+                    <h2 class="tc-section-title">Protección de Datos Personales – Habeas Data</h2>
+                </div>
+            </div>
+            <p>En cumplimiento de la normativa colombiana vigente en materia de protección de datos personales, Donapp actúa como <strong>responsable del tratamiento</strong> de la información personal de sus usuarios y se compromete a garantizar su privacidad y seguridad.</p>
+
+            <div class="tc-law-box">
+                <span class="law-badge">Ley 1581 de 2012</span>
+                <h4>Ley Estatutaria de Protección de Datos Personales</h4>
+                <p>Establece que toda persona tiene derecho a conocer, actualizar y rectificar la información que sobre ella se haya recopilado en bases de datos o archivos. Donapp aplica esta ley en el tratamiento de todos los datos personales de sus usuarios.</p>
+            </div>
+
+            <div class="tc-law-box">
+                <span class="law-badge">Decreto 1377 de 2013</span>
+                <h4>Reglamentación de la Ley 1581</h4>
+                <p>Reglamenta el tratamiento de datos personales en Colombia. Define las condiciones para la recolección, almacenamiento, uso, circulación y supresión de datos. Donapp obtiene el consentimiento previo, expreso e informado de cada usuario antes de procesar su información.</p>
+            </div>
+
+            <div class="tc-law-box">
+                <span class="law-badge">Artículo 15 – Constitución Política</span>
+                <h4>Derecho fundamental al Habeas Data</h4>
+                <p>La Constitución Política de Colombia garantiza a todas las personas el derecho a conocer, actualizar y rectificar las informaciones que se hayan recogido sobre ellas en bancos de datos y en archivos de entidades públicas y privadas.</p>
+            </div>
+
+            <p>Al registrarte en Donapp otorgas tu consentimiento libre, previo, expreso e informado para el tratamiento de tus datos personales conforme a las finalidades aquí descritas. Este consentimiento puede ser revocado en cualquier momento mediante los canales habilitados para ello.</p>
+        </section>
+
+        {# 3. DATOS RECOPILADOS #}
+        <section class="tc-section" id="sec-3">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-database"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 3</span>
+                    <h2 class="tc-section-title">Datos Personales Recopilados</h2>
+                </div>
+            </div>
+            <p>Donapp recopila únicamente los datos estrictamente necesarios para la prestación de sus servicios. A continuación se detalla la información tratada:</p>
+
+            <div class="tc-table-wrap">
+                <table class="tc-table">
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Finalidad</th>
+                            <th>Obligatorio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Nombre completo</td>
+                            <td>Identificación del usuario en la plataforma</td>
+                            <td>Sí</td>
+                        </tr>
+                        <tr>
+                            <td>Tipo y número de documento</td>
+                            <td>Verificación de identidad (CC, TI, CE, PEP)</td>
+                            <td>Sí</td>
+                        </tr>
+                        <tr>
+                            <td>Fecha de nacimiento</td>
+                            <td>Verificación de mayoría de edad</td>
+                            <td>Sí</td>
+                        </tr>
+                        <tr>
+                            <td>Dirección</td>
+                            <td>Coordinación de entrega de donaciones</td>
+                            <td>Sí</td>
+                        </tr>
+                        <tr>
+                            <td>Correo electrónico</td>
+                            <td>Comunicaciones, notificaciones y recuperación de cuenta</td>
+                            <td>Sí</td>
+                        </tr>
+                        <tr>
+                            <td>Teléfono</td>
+                            <td>Contacto para coordinar donaciones</td>
+                            <td>Sí</td>
+                        </tr>
+                        <tr>
+                            <td>Necesidad / Prioridad</td>
+                            <td>Clasificación de solicitudes de ayuda</td>
+                            <td>Solo solicitantes</td>
+                        </tr>
+                        <tr>
+                            <td>Observación de visita</td>
+                            <td>Registro de seguimiento social por el equipo asistente</td>
+                            <td>No</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tc-highlight">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> &nbsp;Datos sensibles</strong>
+                La información sobre necesidades, prioridades y observaciones de visita es considerada de carácter sensible. Donapp la trata con un nivel de seguridad reforzado y solo es accesible por el personal asistente y administrador debidamente autorizado.
+            </div>
+        </section>
+
+        {# 4. DERECHOS ARCO #}
+        <section class="tc-section" id="sec-4">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-user-shield"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 4</span>
+                    <h2 class="tc-section-title">Derechos del Titular – Derechos ARCO</h2>
+                </div>
+            </div>
+            <p>De conformidad con la Ley 1581 de 2012 y el Decreto 1377 de 2013, todo titular de datos personales tiene los siguientes derechos, que puede ejercer en cualquier momento de forma gratuita:</p>
+
+            <div class="rights-grid">
+                <div class="right-card">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <div>
+                        <strong>Acceso</strong>
+                        <p>Conocer qué datos tuyos están almacenados en Donapp y cómo están siendo tratados.</p>
+                    </div>
+                </div>
+                <div class="right-card">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <div>
+                        <strong>Rectificación</strong>
+                        <p>Corregir datos incompletos, inexactos o desactualizados sobre tu persona.</p>
+                    </div>
+                </div>
+                <div class="right-card">
+                    <i class="fa-solid fa-ban"></i>
+                    <div>
+                        <strong>Cancelación / Supresión</strong>
+                        <p>Solicitar la eliminación de tus datos cuando ya no sean necesarios para la finalidad original.</p>
+                    </div>
+                </div>
+                <div class="right-card">
+                    <i class="fa-solid fa-hand"></i>
+                    <div>
+                        <strong>Oposición</strong>
+                        <p>Oponerte al tratamiento de tus datos para finalidades específicas, incluido el uso con fines comerciales.</p>
+                    </div>
+                </div>
+                <div class="right-card">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <div>
+                        <strong>Revocación del consentimiento</strong>
+                        <p>Retirar en cualquier momento el consentimiento otorgado para el tratamiento de tus datos.</p>
+                    </div>
+                </div>
+                <div class="right-card">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <div>
+                        <strong>Queja ante la SIC</strong>
+                        <p>Presentar quejas ante la Superintendencia de Industria y Comercio si consideras que tus derechos han sido vulnerados.</p>
+                    </div>
+                </div>
+            </div>
+
+            <p>Para ejercer cualquiera de estos derechos, comunícate con el equipo de Donapp a través de los canales indicados en el Artículo 12 de este documento. Daremos respuesta en un plazo máximo de <strong>15 días hábiles</strong>, conforme a lo establecido en la normativa vigente.</p>
+        </section>
+
+        {# 5. FINALIDAD DEL USO DE DATOS #}
+        <section class="tc-section" id="sec-5">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 5</span>
+                    <h2 class="tc-section-title">Finalidad del Tratamiento de Datos</h2>
+                </div>
+            </div>
+            <p>Los datos personales recopilados por Donapp serán tratados exclusivamente para las siguientes finalidades:</p>
+
+            <ul class="tc-list">
+                <li><i class="fa-solid fa-check"></i> Gestionar el registro, autenticación y acceso a la plataforma.</li>
+                <li><i class="fa-solid fa-check"></i> Coordinar y hacer seguimiento a procesos de donación entre donantes y solicitantes.</li>
+                <li><i class="fa-solid fa-check"></i> Enviar notificaciones sobre el estado de solicitudes, donaciones y eventos.</li>
+                <li><i class="fa-solid fa-check"></i> Realizar visitas de seguimiento social a solicitantes de ayuda.</li>
+                <li><i class="fa-solid fa-check"></i> Generar estadísticas internas y reportes de impacto de la plataforma (de forma anonimizada).</li>
+                <li><i class="fa-solid fa-check"></i> Garantizar la seguridad y el funcionamiento técnico de la plataforma.</li>
+                <li><i class="fa-solid fa-check"></i> Recuperar credenciales de acceso ante olvido de contraseña.</li>
+                <li><i class="fa-solid fa-times icon-no"></i> <strong>No</strong> se compartirán datos con terceros con fines comerciales ni publicitarios.</li>
+                <li><i class="fa-solid fa-times icon-no"></i> <strong>No</strong> se venderán, cederán ni transferirán datos a entidades externas sin consentimiento explícito.</li>
+            </ul>
+        </section>
+
+        {# 6. SEGURIDAD #}
+        <section class="tc-section" id="sec-6">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-lock"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 6</span>
+                    <h2 class="tc-section-title">Seguridad de la Información</h2>
+                </div>
+            </div>
+            <p>Donapp implementa medidas técnicas y organizativas para proteger los datos personales de sus usuarios contra accesos no autorizados, pérdida, alteración o divulgación indebida.</p>
+
+            <div class="tc-accordion">
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-key accordion-icon"></i> Protección de contraseñas</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        Las contraseñas de los usuarios son almacenadas con algoritmos de hash seguros. Donapp nunca almacena ni tiene acceso a tu contraseña en texto plano.
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-users-gear accordion-icon"></i> Control de acceso por roles</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        La plataforma implementa un sistema de roles (Donante, Asistente, Administrador). Cada rol tiene acceso exclusivamente a la información necesaria para cumplir sus funciones. Los datos sensibles de los solicitantes solo son visibles para el personal autorizado.
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-envelope-open-text accordion-icon"></i> Recuperación segura de cuenta</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        El proceso de recuperación de contraseña utiliza tokens de un solo uso con tiempo de expiración, enviados al correo electrónico registrado. Esto garantiza que solo el titular de la cuenta pueda recuperar el acceso.
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-triangle-exclamation accordion-icon"></i> Responsabilidad del usuario</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        El usuario es responsable de mantener la confidencialidad de sus credenciales de acceso. Donapp recomienda no compartir tu contraseña, cerrar sesión en dispositivos compartidos y notificar de inmediato cualquier acceso no autorizado detectado.
+                    </div>
+                </div>
+            </div>
+
+            <p>En caso de una brecha de seguridad que pueda afectar los derechos de los titulares, Donapp notificará a los usuarios afectados y a la Superintendencia de Industria y Comercio (SIC) en los términos exigidos por la ley.</p>
+        </section>
+
+        {# 7. DONACIONES #}
+        <section class="tc-section" id="sec-7">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 7</span>
+                    <h2 class="tc-section-title">Condiciones del Proceso de Donación</h2>
+                </div>
+            </div>
+            <p>Las donaciones gestionadas a través de Donapp son exclusivamente de bienes y recursos físicos. La plataforma no gestiona transacciones económicas ni dinero en efectivo.</p>
+
+            <ul class="tc-list">
+                <li><i class="fa-solid fa-circle-check"></i> Las donaciones son voluntarias y el donante no recibirá contraprestación económica a cambio.</li>
+                <li><i class="fa-solid fa-circle-check"></i> El donante es responsable de que los bienes donados estén en buen estado, sean seguros y aptos para su uso.</li>
+                <li><i class="fa-solid fa-circle-check"></i> Donapp actúa como intermediario de coordinación, no como responsable directo de los bienes donados.</li>
+                <li><i class="fa-solid fa-circle-check"></i> El equipo asistente puede verificar y aprobar o rechazar solicitudes de donación según criterios de prioridad y necesidad.</li>
+                <li><i class="fa-solid fa-circle-check"></i> El lugar y fecha de entrega de las donaciones se coordina a través de los eventos registrados en la plataforma.</li>
+                <li><i class="fa-solid fa-circle-check"></i> Donapp se reserva el derecho de suspender publicaciones que contengan información falsa, engañosa o que atenten contra la dignidad de las personas.</li>
+            </ul>
+
+            <div class="tc-highlight">
+                <strong><i class="fa-solid fa-circle-info"></i> &nbsp;Sobre los estados de las donaciones</strong>
+                Cada donación en Donapp puede estar en estado <em>pendiente</em>, <em>en proceso</em> o <em>entregada</em>. El estado es actualizado por el equipo asistente o administrador y refleja el avance real del proceso.
+            </div>
+        </section>
+
+        {# 8. ROLES Y RESPONSABILIDADES #}
+        <section class="tc-section" id="sec-8">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 8</span>
+                    <h2 class="tc-section-title">Roles de Usuario y Responsabilidades</h2>
+                </div>
+            </div>
+            <p>Donapp define tres roles de usuario, cada uno con permisos y responsabilidades específicas:</p>
+
+            <div class="tc-accordion">
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-heart accordion-icon"></i> Donante / Solicitante</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        Puede registrarse en la plataforma, publicar donaciones, solicitar ayuda y participar en eventos. Un mismo usuario puede actuar como donante y solicitante simultáneamente. Es responsable de la veracidad de la información que publica y de cumplir los compromisos de entrega adquiridos.
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-user-tie accordion-icon"></i> Asistente</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        Personal autorizado por la Corporación WALDORF. Tiene acceso a información detallada de los solicitantes para realizar seguimiento social. Es responsable de mantener la confidencialidad de los datos sensibles a los que tiene acceso y de registrar observaciones de manera ética y objetiva.
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">
+                        <span><i class="fa-solid fa-shield-halved accordion-icon"></i> Administrador</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="accordion-body">
+                        Tiene acceso completo a la plataforma incluyendo gestión de usuarios, categorías, eventos y reportes. Es designado por la Corporación WALDORF y responde directamente ante esta por el uso que haga de las facultades administrativas.
+                    </div>
+                </div>
+            </div>
+
+            <p>El mal uso de cualquier rol, incluyendo el acceso no autorizado a información de otros usuarios, la publicación de contenido falso o el uso indebido de los datos, puede resultar en la suspensión inmediata de la cuenta y las acciones legales correspondientes.</p>
+        </section>
+
+        {# 9. MENORES DE EDAD #}
+        <section class="tc-section" id="sec-9">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-child"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 9</span>
+                    <h2 class="tc-section-title">Protección de Menores de Edad</h2>
+                </div>
+            </div>
+            <p>Donapp está diseñada para ser utilizada por personas mayores de 18 años. En cumplimiento de la Ley 1581 de 2012, que establece una protección reforzada para los datos de menores de edad, aplicamos las siguientes condiciones:</p>
+
+            <ul class="tc-list">
+                <li><i class="fa-solid fa-shield-halved"></i> El registro como usuario activo de la plataforma requiere ser mayor de 18 años.</li>
+                <li><i class="fa-solid fa-shield-halved"></i> Los menores de edad pueden ser beneficiarios de donaciones, pero solo a través de un representante legal adulto registrado.</li>
+                <li><i class="fa-solid fa-shield-halved"></i> En ningún caso se recopilarán datos personales de menores de edad sin el consentimiento expreso de sus padres o representantes legales.</li>
+                <li><i class="fa-solid fa-shield-halved"></i> Si se detecta el registro de un menor sin autorización, la cuenta será suspendida y los datos eliminados de inmediato.</li>
+            </ul>
+        </section>
+
+        {# 10. COOKIES #}
+        <section class="tc-section" id="sec-10">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-cookie-bite"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 10</span>
+                    <h2 class="tc-section-title">Uso de Sesiones y Cookies</h2>
+                </div>
+            </div>
+            <p>Donapp utiliza sesiones del servidor para mantener la autenticación de los usuarios mientras navegan por la plataforma. Estas sesiones son temporales y se eliminan al cerrar sesión o al expirar el tiempo de inactividad.</p>
+
+            <ul class="tc-list">
+                <li><i class="fa-solid fa-cookie"></i> Las sesiones se usan exclusivamente para mantener el estado de autenticación del usuario.</li>
+                <li><i class="fa-solid fa-cookie"></i> No se utilizan cookies de rastreo con fines publicitarios.</li>
+                <li><i class="fa-solid fa-cookie"></i> No se comparte información de sesión con terceros.</li>
+                <li><i class="fa-solid fa-cookie"></i> Al hacer clic en "Cerrar sesión", todos los datos de sesión son eliminados del servidor.</li>
+            </ul>
+        </section>
+
+        {# 11. MODIFICACIONES #}
+        <section class="tc-section" id="sec-11">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-rotate"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 11</span>
+                    <h2 class="tc-section-title">Modificaciones a los Términos</h2>
+                </div>
+            </div>
+            <p>Donapp se reserva el derecho de modificar los presentes Términos y Condiciones en cualquier momento. Cualquier cambio sustancial será notificado a los usuarios registrados mediante el correo electrónico asociado a su cuenta, con al menos <strong>10 días hábiles</strong> de anticipación.</p>
+            <p>El uso continuado de la plataforma tras la vigencia de los cambios implica la aceptación de los nuevos términos. Si no estás de acuerdo con las modificaciones, puedes solicitar la eliminación de tu cuenta antes de que entren en vigor.</p>
+
+            <div class="tc-highlight">
+                <strong><i class="fa-solid fa-circle-info"></i> &nbsp;Versión actual</strong>
+                Estos Términos y Condiciones están vigentes desde el 1 de junio de 2026 y reemplazan cualquier versión anterior.
+            </div>
+        </section>
+
+        {# 12. CONTACTO #}
+        <section class="tc-section" id="sec-12">
+            <div class="tc-section-header">
+                <div class="tc-section-icon"><i class="fa-solid fa-envelope"></i></div>
+                <div>
+                    <span class="tc-section-num">Artículo 12</span>
+                    <h2 class="tc-section-title">Contacto y Canal de PQR</h2>
+                </div>
+            </div>
+            <p>Para ejercer tus derechos como titular de datos, presentar peticiones, quejas o reclamos (PQR), o para cualquier consulta relacionada con estos Términos y Condiciones, puedes contactarnos a través de los siguientes canales:</p>
+
+            <ul class="tc-list">
+                <li><i class="fa-solid fa-building"></i> <strong>Razón social:</strong>&nbsp; Corporación Educativa y Social WALDORF</li>
+                <li><i class="fa-solid fa-location-dot"></i> <strong>Dirección:</strong>&nbsp; Transversal 73 H Bis # 75B – 46 Sur, Sierra Morena V Sector, Ciudad Bolívar, Bogotá</li>
+                <li><i class="fa-solid fa-globe"></i> <strong>Sitio web:</strong>&nbsp;
+                    <a href="https://www.ceswaldorf.org/" target="_blank" class="tc-link">ceswaldorf.org</a>
+                </li>
+            </ul>
+
+            <div class="tc-highlight">
+                <strong><i class="fa-solid fa-clock"></i> &nbsp;Tiempo de respuesta</strong>
+                Las solicitudes relacionadas con datos personales serán atendidas en un plazo máximo de 15 días hábiles a partir de la recepción de la solicitud, conforme a lo dispuesto en el artículo 14 de la Ley 1581 de 2012. En caso de que no sea posible atender la solicitud en dicho plazo, se informará al solicitante antes de su vencimiento.
+            </div>
+
+            <p>Si consideras que Donapp ha vulnerado tus derechos en materia de protección de datos, puedes presentar una queja ante la <strong>Superintendencia de Industria y Comercio (SIC)</strong> a través de
+                <a href="https://www.sic.gov.co" target="_blank" class="tc-link">www.sic.gov.co</a>.
+            </p>
+        </section>
+
+    </main>
+
+    {# ═══════════════ BARRA DE ACEPTACIÓN FIJA ═══════════════ #}
+    <div class="tc-accept-bar" id="acceptBar" role="region" aria-label="Aceptar términos">
+        <p>Al usar Donapp declaras haber leído y aceptado estos Términos y Condiciones y nuestra Política de Habeas Data.</p>
+        <button class="btn-accept" id="acceptBtn">
+            <i class="fa-solid fa-circle-check"></i>&nbsp; He leído y acepto
+        </button>
+    </div>
+
+    {# ═══════════════ FOOTER ═══════════════ #}
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <a href="{% url 'index' %}">
+                    <img id="footerLogo"
+                         src="{% static 'assets/uploads/Red-Logo.png' %}"
+                         alt="Donapp"
+                         class="footer-logo">
+                </a>
+                <p>Plataforma de donaciones para la comunidad de Ciudad Bolívar.</p>
+            </div>
+            <div class="footer-info">
+                <p>
+                    <i class="fa-solid fa-location-dot"></i>
+                    <a href="https://maps.app.goo.gl/vnfgQmNTdWB2v4Yg7" class="tc-link">
+                        Transversal 73 H Bis # 75B - 46 Sur, Sierra Morena V Sector, Ciudad Bolívar, Bogotá
+                    </a>
+                </p>
+                <p><i class="fa-solid fa-building"></i> Corporación Educativa y Social WALDORF</p>
+                <a href="https://www.ceswaldorf.org/" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> ceswaldorf.org
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} Donapp – Corporación Educativa y Social WALDORF. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'assets/js/terminos.js' %}"></script>
+{% endblock %}

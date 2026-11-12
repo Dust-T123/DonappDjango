@@ -1,0 +1,638 @@
+/* =====================================================
+   terminos.css — Estilos de Términos y Condiciones
+   ===================================================== */
+
+/* ── VARIABLES ── */
+:root {
+    --color-primary:      #0B5AA6;
+    --color-primary-dark: #073E73;
+    --color-secondary:    #073E73;
+    --color-text:         #ffffff;
+    --color-text-muted:   #393939;
+    --color-border:       #2d3561;
+    --color-success:      #10B981;
+    --color-warning:      #F59E0B;
+    --color-error:        #EF4444;
+
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    --shadow-sm: 0 2px 8px  rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+
+    /* Altura de la barra de aceptación fija (usada en padding-bottom del body) */
+    --accept-bar-h: 80px;
+}
+
+/* ── RESET & BASE ── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #1670C4 0%, #073E73 100%);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    /* FIX SCROLL: reserva espacio inferior para la barra fija cuando está visible */
+    padding-bottom: 0;
+    transition: padding-bottom 0.4s ease;
+}
+
+/* Clase añadida por JS cuando la barra aparece */
+body.accept-bar-open {
+    padding-bottom: var(--accept-bar-h);
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+}
+
+/* ── HEADER ── */
+.tc-header {
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.tc-header-logo {
+    height: 44px;
+    width: auto;
+}
+
+.tc-header-fallback {
+    display: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.tc-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: var(--radius-sm);
+    transition: background 0.2s, color 0.2s;
+}
+
+.tc-back-btn:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+/* ── ÍNDICE DE NAVEGACIÓN ── */
+.tc-index-bar {
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0.85rem 2rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tc-index-bar::-webkit-scrollbar         { height: 3px; }
+.tc-index-bar::-webkit-scrollbar-thumb   { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+.tc-index-inner {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.tc-index-bar a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.3rem 0.85rem;
+    border-radius: 50px;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.tc-index-bar a:hover,
+.tc-index-bar a.active {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+/* ── HERO ── */
+.tc-hero {
+    text-align: center;
+    padding: 4rem 2rem 3rem;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.tc-hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 0.3rem 1.1rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.25rem;
+}
+
+.tc-hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.1;
+    margin-bottom: 1rem;
+}
+
+.tc-hero p {
+    color: rgba(255,255,255,0.8);
+    font-size: 1.05rem;
+    max-width: 580px;
+    margin: 0 auto 2rem;
+}
+
+.tc-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.65);
+}
+
+.tc-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ── CUERPO PRINCIPAL ── */
+.tc-body {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+}
+
+/* ── SECCIONES ── */
+.tc-section {
+    background: #fff;
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    margin-bottom: 1.75rem;
+    color: var(--color-text-muted);
+    scroll-margin-top: 5rem;
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.3s;
+}
+
+.tc-section:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.tc-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.tc-section-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #0B5AA6, #073E73);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.tc-section-title {
+    font-size: 1.35rem;
+    color: var(--color-secondary);
+    line-height: 1.2;
+}
+
+.tc-section-num {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.tc-section p {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.75;
+}
+
+.tc-section p:last-child { margin-bottom: 0; }
+
+.tc-section h4 {
+    color: var(--color-primary-dark);
+    font-size: 1rem;
+    margin: 1.5rem 0 0.5rem;
+}
+
+/* ── LISTAS ── */
+.tc-list {
+    list-style: none;
+    margin: 1rem 0;
+}
+
+.tc-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.tc-list li:last-child { border-bottom: none; }
+
+.tc-list li i {
+    color: var(--color-primary);
+    margin-top: 3px;
+    flex-shrink: 0;
+    width: 16px;
+}
+
+/* Ícono "No" en lista de finalidades */
+.tc-list li i.icon-no { color: #EF4444; }
+
+/* ── CAJA DESTACADA ── */
+.tc-highlight {
+    background: #fff5f5;
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 1.1rem 1.25rem;
+    margin: 1.25rem 0;
+    font-size: 0.9rem;
+}
+
+.tc-highlight strong {
+    color: var(--color-primary-dark);
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.95rem;
+}
+
+/* ── CAJA LEY ── */
+.tc-law-box {
+    background: linear-gradient(135deg, #EAF2FB, #E3EDFB);
+    border: 1px solid #BBD6F2;
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin: 1.25rem 0;
+}
+
+.tc-law-box .law-badge {
+    display: inline-block;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.7rem;
+    border-radius: 50px;
+    margin-bottom: 0.65rem;
+}
+
+.tc-law-box h4 {
+    color: var(--color-primary-dark);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.tc-law-box p {
+    font-size: 0.9rem;
+    color: #1b3a5c;
+    margin-bottom: 0;
+}
+
+/* ── GRID DE DERECHOS ── */
+.rights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+    margin: 1.25rem 0;
+}
+
+.right-card {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.right-card:hover {
+    border-color: #BBD6F2;
+    background: #EAF2FB;
+}
+
+.right-card i {
+    color: var(--color-primary);
+    font-size: 1.1rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.right-card strong {
+    display: block;
+    color: var(--color-primary-dark);
+    font-size: 0.88rem;
+    margin-bottom: 0.25rem;
+}
+
+.right-card p {
+    font-size: 0.82rem;
+    color: #666;
+    margin: 0 !important;
+    line-height: 1.5;
+}
+
+/* ── TABLA ── */
+.tc-table-wrap {
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    border-radius: var(--radius-md);
+    border: 1px solid #f0f0f0;
+}
+
+.tc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.tc-table thead {
+    background: linear-gradient(135deg, #0B5AA6, #073E73);
+    color: #fff;
+}
+
+.tc-table th {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+}
+
+.tc-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f5f5f5;
+    color: var(--color-text-muted);
+    vertical-align: top;
+}
+
+.tc-table tr:last-child td { border-bottom: none; }
+.tc-table tr:nth-child(even) td { background: #fafafa; }
+
+/* ── ACORDEÓN ── */
+.tc-accordion {
+    border: 1px solid #f0f0f0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.accordion-item { border-bottom: 1px solid #f0f0f0; }
+.accordion-item:last-child { border-bottom: none; }
+
+.accordion-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.accordion-btn:hover { background: #fafafa; }
+
+.accordion-btn .accordion-icon {
+    color: var(--color-primary);
+    margin-right: 0.5rem;
+}
+
+.accordion-btn i.chevron {
+    color: var(--color-primary);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+
+.accordion-btn.open i.chevron { transform: rotate(180deg); }
+
+.accordion-body {
+    display: none;
+    padding: 0 1.25rem 1.1rem;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+.accordion-body.open { display: block; }
+
+/* ── BARRA DE ACEPTACIÓN FIJA ── */
+.tc-accept-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 5, 5, 0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    z-index: 200;
+
+    /* FIX SCROLL: oculta la barra sin bloquear eventos táctiles/scroll */
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;        /* ← clave: no bloquea el scroll cuando está oculta */
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.tc-accept-bar.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Estado "aceptado": la barra se oculta y libera pointer-events */
+.tc-accept-bar.accepted {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tc-accept-bar p {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.7);
+    max-width: 560px;
+}
+
+.btn-accept {
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, #0B5AA6, #073E73);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn-accept:hover    { opacity: 0.88; transform: translateY(-1px); }
+.btn-accept:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Estado confirmado */
+.btn-accept.confirmed {
+    background: linear-gradient(135deg, #10B981, #059669);
+}
+
+/* ── FOOTER ── */
+.main-footer {
+    background: #ffffff;
+    padding: 0;
+}
+
+.footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 2rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    text-align: left;
+}
+
+.footer-logo { max-width: 150px; height: auto; }
+
+.footer-brand p {
+    color: var(--color-primary-dark);
+    font-size: 0.9rem;
+    max-width: 280px;
+}
+
+.footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+}
+
+.footer-info p,
+.footer-info a {
+    color: var(--color-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-info a:hover { color: var(--color-primary-dark); }
+.footer-info i       { color: var(--color-primary); width: 16px; }
+
+.footer-bottom {
+    border-top: 1px solid rgba(0,0,0,0.07);
+    text-align: center;
+    padding: 1.25rem 2rem;
+    color: var(--color-primary-dark);
+    font-size: 0.82rem;
+}
+
+/* ── ENLACES DENTRO DE SECCIONES ── */
+.tc-link {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.tc-link:hover { text-decoration: underline; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .tc-section       { padding: 1.75rem 1.25rem; }
+    .rights-grid      { grid-template-columns: 1fr; }
+    .footer-content   { grid-template-columns: 1fr; padding: 2rem 1.5rem; }
+    .tc-accept-bar    { flex-direction: column; align-items: stretch; text-align: center; }
+    .tc-body          { padding: 2rem 1rem 6rem; }
+    :root             { --accept-bar-h: 130px; }
+}
+
+@media (max-width: 480px) {
+    .tc-hero   { padding: 2.5rem 1rem 2rem; }
+    .tc-meta   { flex-direction: column; align-items: center; gap: 0.5rem; }
+    .tc-header { padding: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}

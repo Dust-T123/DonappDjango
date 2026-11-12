@@ -1,0 +1,54 @@
+{% extends 'core/layouts/app.html' %}
+{% load static %}
+
+{% block title %}Restablecer Contraseña — Donapp{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'assets/css/admin_style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/token.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="recover-card">
+    <a href="{% url 'index' %}" class="logo-container">
+        <img src="{% static 'assets/uploads/Red-Logo.png' %}" alt="Logo Donapp" class="form-logo">
+    </a>
+
+    {% if validlink %}
+        <h2><i class="fa-solid fa-key"></i> Nueva Contraseña</h2>
+
+        {% for campo in form %}{% for error in campo.errors %}
+            <div class="msg-err">{{ error }}</div>
+        {% endfor %}{% endfor %}
+
+        <form method="POST" onsubmit="return checkPass(this)">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="rp_pass1">Nueva contraseña</label>
+                <input type="password" name="new_password1" id="rp_pass1" class="form-input"
+                       required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="form-group">
+                <label for="rp_pass2">Confirmar contraseña</label>
+                <input type="password" name="new_password2" id="rp_pass2" class="form-input"
+                       required minlength="6" autocomplete="new-password" placeholder="Repite tu contraseña">
+                <small id="rp_match_err" style="color:#c62828;display:none;">Las contraseñas no coinciden.</small>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fa-solid fa-floppy-disk"></i> Restablecer contraseña
+            </button>
+        </form>
+    {% else %}
+        <h2><i class="fa-solid fa-link-slash"></i> Enlace no válido</h2>
+        <div class="msg-err">El enlace es inválido o ha expirado. Solicita uno nuevo.</div>
+        <a href="{% url 'recuperar' %}" class="back-link" style="text-decoration:none;">Solicitar un nuevo enlace</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if validlink %}<script src="{% static 'assets/js/token.js' %}"></script>{% endif %}
+{% endblock %}

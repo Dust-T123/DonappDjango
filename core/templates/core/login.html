@@ -40,8 +40,7 @@
                     <i class="fa-solid fa-eye" id="eyeIcon"></i>
                 </button>
             </div>
-            <!-- Si aún no tienes la ruta de recuperar contraseña, puedes cambiar temporalmente el href a "#" -->
-            <a href="#" class="forgot-pass">¿Olvidaste tu contraseña?</a>
+            <a href="{% url 'recuperar' %}" class="forgot-pass">¿Olvidaste tu contraseña?</a>
         </div>
 
         <button type="submit" class="boton-moderno">
@@ -50,7 +49,7 @@
         </button>
 
         <div class="auth-links">
-            <p>¿No tienes cuenta? <a href="#">Regístrate aquí</a></p>
+            <p>¿No tienes cuenta? <a href="{% url 'registro' %}">Regístrate aquí</a></p>
         </div>
     </form>
 </div>

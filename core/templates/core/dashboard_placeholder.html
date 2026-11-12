@@ -1,0 +1,26 @@
+{% extends 'core/layouts/app.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} | Donapp{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'assets/css/StylesIniciarS.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="caja-exterior">
+    <a href="{% url 'index' %}" class="logo-container">
+        <img src="{% static 'assets/uploads/Red-Logo.png' %}" alt="Logo Donapp" class="form-logo">
+    </a>
+    <h2>{{ titulo }}</h2>
+    <p class="subtitle">Hola, {{ request.user.nombre }}. Este panel se está migrando desde Laravel.</p>
+
+    <form action="{% url 'logout' %}" method="POST" class="form-container">
+        {% csrf_token %}
+        <button type="submit" class="boton-moderno">
+            <span>Cerrar sesión</span>
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+    </form>
+</div>
+{% endblock %}

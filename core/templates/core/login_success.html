@@ -14,14 +14,14 @@
     Swal.fire({
         icon: 'success',
         title: '¡Bienvenido!',
-        text: 'Hola {{ nombre }}, redirigiéndote a tu panel...',
+        text: 'Hola {{ nombre|escapejs }}, redirigiéndote a tu panel...',
         confirmButtonColor: '#0B5AA6',
         confirmButtonText: 'ENTENDIDO',
         allowOutsideClick: false,
         allowEscapeKey: false,
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = '{{ ruta }}';
+            window.location.href = '{{ ruta|escapejs }}';
         }
     });
 </script>
