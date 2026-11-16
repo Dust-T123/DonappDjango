@@ -138,3 +138,7 @@ if _email_backend.endswith('smtp.EmailBackend'):
     }
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Donapp <no-reply@donapp.local>')
+
+# Archivos privados (p. ej. documentos de identidad de las solicitudes de corrección).
+# Fuera de MEDIA_ROOT para que nunca se sirvan públicamente.
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'storage_privado'
