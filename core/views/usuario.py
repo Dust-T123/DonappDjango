@@ -6,14 +6,10 @@ leer ni modificar registros de otro (en Laravel era el mismo patrón con
 (Laravel usaba PUT/DELETE simulados con @method).
 """
 
-import hashlib
 import json
-import uuid
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from django.core.files.storage import FileSystemStorage
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,6 +21,7 @@ from ..forms import (
     CorreccionForm, DonacionForm, NotaVisitaForm, PerfilDonanteForm,
     SolicitudForm, VisitaForm,
 )
+from .comun import a_panel, crear_correccion, primer_error, url_imagen
 from ..models import (
     Categoria, CorreccionDatos, Donacion, DonacionUsuario, Evento, Solicitud,
     VisitaDomiciliaria, VisitaObservacion,
@@ -34,30 +31,6 @@ TABS = ('inicio', 'donaciones', 'solicitudes', 'visitas', 'eventos', 'perfil')
 ESTADOS_FILTRO = [('pendiente', 'Pendiente'), ('aprobada', 'Aprobada'), ('rechazada', 'Rechazada'),
                   ('completada', 'Completada'), ('cancelada', 'Cancelada')]
 ESTADOS_ACTIVOS_VISITA = ('pendiente', 'aprobada')
-
-# Campo del formulario de corrección -> atributo del modelo Usuario.
-ATRIBUTO_CORRECCION = {
-    'nombre': 'nombre', 'apellido': 'apellido', 'tipoDocumento': 'tipo_documento',
-    'numDocumento': 'num_documento', 'fechaNacimiento': 'fecha_nacimiento',
-}
-
-def almacen_privado():
-    """Disco privado: los documentos de identidad NO deben quedar en MEDIA_ROOT (público)."""
-    return FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT)
-
-
-def _a_panel(tab, **extra):
-    from django.urls import reverse
-    from urllib.parse import urlencode
-    return redirect(f"{reverse('dashboard_usuario')}?{urlencode({'tab': tab, **extra})}")
-
-
-def _primer_error(form):
-    return next(iter(form.errors.values()))[0]
-
-
-def _url_imagen(campo):
-    return campo.url if campo else ''
 
 
 def _filtrar(queryset, request, prefijo):
@@ -94,7 +67,7 @@ def dashboard_usuario(request):
             'idDonacion': d.id, 'descripcion': d.descripcion,
             'categoria': d.categoria.nombre if d.categoria else '—', 'stock': d.stock,
             'estado': d.estado, 'fechaCreacion': d.fecha.isoformat() if d.fecha else '',
-            'observacion': d.observacion or '', 'imagen': _url_imagen(d.imagen),
+            'observacion': d.observacion or '', 'imagen': url_imagen(d.imagen),
             'idCategoria': d.categoria_id,
         }, ensure_ascii=False)
 
@@ -112,7 +85,7 @@ def dashboard_usuario(request):
     for ev in eventos:
         ev.multidia = bool(ev.fecha_inicio and ev.fecha_fin and ev.fecha_inicio != ev.fecha_fin)
         ev.json = json.dumps({
-            'nombre': ev.nombre, 'contenido': ev.contenido, 'imagen': _url_imagen(ev.imagen),
+            'nombre': ev.nombre, 'contenido': ev.contenido, 'imagen': url_imagen(ev.imagen),
             'fechaInicio': ev.fecha_inicio.isoformat() if ev.fecha_inicio else None,
             'fechaFin': ev.fecha_fin.isoformat() if ev.fecha_fin else None,
             'lugar': ev.lugar,
@@ -162,8 +135,8 @@ def dashboard_usuario(request):
 def donacion_crear(request):
     form = DonacionForm(request.POST, request.FILES)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('donaciones')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'donaciones')
     c = form.cleaned_data
     with transaction.atomic():
         donacion = Donacion.objects.create(
@@ -171,7 +144,7 @@ def donacion_crear(request):
             stock=c['stock'], categoria=c['idCategoria'])
         DonacionUsuario.objects.create(donante=request.user, donacion=donacion)
     messages.success(request, '¡Donación registrada! Queda pendiente de revisión.')
-    return _a_panel('donaciones')
+    return a_panel('dashboard_usuario', 'donaciones')
 
 
 @rol_requerido('donante')
@@ -181,15 +154,15 @@ def donacion_editar(request, pk):
     donacion = get_object_or_404(Donacion, pk=pk, donantes__donante=request.user, estado='pendiente')
     form = DonacionForm(request.POST, request.FILES)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('donaciones')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'donaciones')
     c = form.cleaned_data
     donacion.descripcion, donacion.categoria, donacion.stock = c['descripcion'], c['idCategoria'], c['stock']
     if c['imagen']:
         donacion.imagen = c['imagen']
     donacion.save()
     messages.success(request, 'Donación actualizada correctamente.')
-    return _a_panel('donaciones')
+    return a_panel('dashboard_usuario', 'donaciones')
 
 
 @rol_requerido('donante')
@@ -200,7 +173,7 @@ def donacion_cancelar(request, pk):
         DonacionUsuario.objects.filter(donacion=donacion).delete()
         donacion.delete()
     messages.success(request, 'Donación cancelada correctamente.')
-    return _a_panel('donaciones')
+    return a_panel('dashboard_usuario', 'donaciones')
 
 
 # ── SOLICITUDES ──────────────────────────────────────────────────────────────
@@ -210,14 +183,14 @@ def donacion_cancelar(request, pk):
 def solicitud_crear(request):
     form = SolicitudForm(request.POST)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('solicitudes')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'solicitudes')
     # En Laravel idGestor se llenaba con el propio solicitante; aquí queda vacío
     # hasta que un asistente/administrador la gestione.
     Solicitud.objects.create(descripcion=form.cleaned_data['descripcion'], estado='pendiente',
                              solicitante=request.user, categoria=form.cleaned_data['idCategoria'])
     messages.success(request, '¡Solicitud registrada! Queda pendiente de revisión.')
-    return _a_panel('solicitudes')
+    return a_panel('dashboard_usuario', 'solicitudes')
 
 
 @rol_requerido('donante')
@@ -226,13 +199,13 @@ def solicitud_editar(request, pk):
     solicitud = get_object_or_404(Solicitud, pk=pk, solicitante=request.user, estado='pendiente')
     form = SolicitudForm(request.POST)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('solicitudes')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'solicitudes')
     solicitud.descripcion = form.cleaned_data['descripcion']
     solicitud.categoria = form.cleaned_data['idCategoria']
     solicitud.save()
     messages.success(request, 'Solicitud actualizada correctamente.')
-    return _a_panel('solicitudes')
+    return a_panel('dashboard_usuario', 'solicitudes')
 
 
 @rol_requerido('donante')
@@ -240,7 +213,7 @@ def solicitud_editar(request, pk):
 def solicitud_cancelar(request, pk):
     get_object_or_404(Solicitud, pk=pk, solicitante=request.user, estado='pendiente').delete()
     messages.success(request, 'Solicitud cancelada correctamente.')
-    return _a_panel('solicitudes')
+    return a_panel('dashboard_usuario', 'solicitudes')
 
 
 # ── VISITAS DOMICILIARIAS ────────────────────────────────────────────────────
@@ -252,17 +225,17 @@ def visita_crear(request):
     if VisitaDomiciliaria.objects.filter(usuario=request.user, estado__in=ESTADOS_ACTIVOS_VISITA).exists():
         messages.error(request, 'Ya tienes una visita domiciliaria pendiente o aprobada. '
                                 'Espera a que se resuelva o cancélala antes de solicitar otra.')
-        return _a_panel('visitas')
+        return a_panel('dashboard_usuario', 'visitas')
     form = VisitaForm(request.POST)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('visitas')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'visitas')
     c = form.cleaned_data
     VisitaDomiciliaria.objects.create(usuario=request.user, direccion=c['direccion'], motivo=c['motivo'],
                                       fecha_preferida=c['fechaPreferida'], estado='pendiente')
     messages.success(request, 'Tu solicitud de visita domiciliaria fue enviada. '
                               'Un asistente o administrador la revisará pronto.')
-    return _a_panel('visitas')
+    return a_panel('dashboard_usuario', 'visitas')
 
 
 @rol_requerido('donante')
@@ -271,11 +244,11 @@ def visita_cancelar(request, pk):
     visita = get_object_or_404(VisitaDomiciliaria, pk=pk, usuario=request.user)
     if visita.estado != 'pendiente':
         messages.error(request, 'Solo puedes cancelar visitas que aún están pendientes.')
-        return _a_panel('visitas')
+        return a_panel('dashboard_usuario', 'visitas')
     visita.estado, visita.fecha_resolucion = 'cancelada', timezone.now()
     visita.save()
     messages.success(request, 'Visita cancelada.')
-    return _a_panel('visitas')
+    return a_panel('dashboard_usuario', 'visitas')
 
 
 @rol_requerido('donante')
@@ -284,11 +257,11 @@ def visita_nota(request, pk):
     visita = get_object_or_404(VisitaDomiciliaria, pk=pk, usuario=request.user)
     form = NotaVisitaForm(request.POST)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('visitas')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'visitas')
     VisitaObservacion.objects.create(visita=visita, usuario=request.user, texto=form.cleaned_data['texto'])
     messages.success(request, 'Nota agregada.')
-    return _a_panel('visitas')
+    return a_panel('dashboard_usuario', 'visitas')
 
 
 # ── PERFIL ───────────────────────────────────────────────────────────────────
@@ -299,8 +272,8 @@ def perfil_actualizar(request):
     usuario = request.user
     form = PerfilDonanteForm(request.POST, usuario=usuario)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('perfil')
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'perfil')
     c = form.cleaned_data
     usuario.email, usuario.telefono, usuario.direccion = c['email'], c['telefono'], c['direccion']
     usuario.necesidad = c['necesidad'] or None
@@ -310,34 +283,17 @@ def perfil_actualizar(request):
     if c['password']:
         update_session_auth_hash(request, usuario)  # mantiene la sesión abierta tras cambiar la clave
     messages.success(request, 'Perfil actualizado correctamente.')
-    return _a_panel('perfil')
+    return a_panel('dashboard_usuario', 'perfil')
 
 
 @rol_requerido('donante')
 @require_POST
 def perfil_solicitar_correccion(request):
-    usuario = request.user
     form = CorreccionForm(request.POST, request.FILES)
     if not form.is_valid():
-        messages.error(request, _primer_error(form))
-        return _a_panel('perfil')
-    c = form.cleaned_data
-    archivo = c['soporte']
-
-    # Soporte en disco privado, con nombre aleatorio (nunca el que envía el usuario)
-    # y hash SHA-256 para verificar integridad. Nunca en la base de datos.
-    sha = hashlib.sha256()
-    for trozo in archivo.chunks():
-        sha.update(trozo)
-    extension = archivo.name.rsplit('.', 1)[-1].lower()
-    ruta = almacen_privado().save(f'correcciones/{uuid.uuid4().hex}.{extension}', archivo)
-
-    valor_anterior = getattr(usuario, ATRIBUTO_CORRECCION[c['campo']])
-    CorreccionDatos.objects.create(
-        usuario=usuario, solicitante=usuario, campo=c['campo'], valor_anterior=str(valor_anterior),
-        valor_nuevo=c['valorNuevo'], justificacion=c['justificacion'], estado='pendiente',
-        soporte_ruta=ruta, soporte_mime=archivo.content_type, soporte_hash=sha.hexdigest(),
-        consentimiento=True)
+        messages.error(request, primer_error(form))
+        return a_panel('dashboard_usuario', 'perfil')
+    crear_correccion(request.user, request.user, form.cleaned_data)
     messages.success(request, 'Tu solicitud de corrección fue enviada y quedará pendiente '
                               'de aprobación por un administrador.')
-    return _a_panel('perfil')
+    return a_panel('dashboard_usuario', 'perfil')

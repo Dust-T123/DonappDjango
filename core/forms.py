@@ -6,7 +6,9 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import CAMPOS_CORRECCION, TIPOS_DOCUMENTO, Categoria, Usuario, calcular_edad
+from .models import (
+    CAMPOS_CORRECCION, ESTADOS_DONACION, ESTADOS_EVENTO, TIPOS_DOCUMENTO, Categoria, Usuario, calcular_edad,
+)
 
 SOLO_LETRAS = re.compile(r'^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$')
 DOCUMENTO = re.compile(r'^[A-Za-z0-9]{4,15}$')
@@ -258,3 +260,198 @@ class CorreccionForm(forms.Form):
         if not cabecera.startswith(FIRMAS_SOPORTE):
             raise ValidationError('El contenido del archivo no corresponde a una imagen JPG/PNG o a un PDF.')
         return archivo
+
+
+# ── FORMULARIOS COMPARTIDOS ASISTENTE / ADMINISTRADOR ────────────────────────
+
+SOLO_CATEGORIA = re.compile(r'^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s()\-]+$')
+PRIORIDADES_VALIDAS = [(v, v) for v in ('urgente', 'alta', 'media', 'baja')]
+
+
+class CategoriaForm(forms.Form):
+    # El campo se llama nombre_categoria como en el Blade original.
+    nombre_categoria = forms.CharField(
+        min_length=3, max_length=100,
+        error_messages={'required': 'El nombre de la categoría es obligatorio.',
+                        'min_length': 'El nombre debe tener al menos 3 caracteres.'},
+    )
+
+    def __init__(self, *args, excluir_pk=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.excluir_pk = excluir_pk
+
+    def clean_nombre_categoria(self):
+        nombre = ' '.join(self.cleaned_data['nombre_categoria'].split())
+        if not SOLO_CATEGORIA.match(nombre):
+            raise ValidationError('El nombre de una categoría solo puede contener letras, espacios, '
+                                  'guiones y paréntesis (nunca números).')
+        if Categoria.objects.filter(nombre__iexact=nombre).exclude(pk=self.excluir_pk).exists():
+            raise ValidationError('Ya existe una categoría con ese nombre.')
+        return nombre
+
+
+class EventoForm(forms.Form):
+    nombre_evento = forms.CharField(min_length=3, max_length=150,
+                                    error_messages={'required': 'El nombre del evento es obligatorio.',
+                                                    'min_length': 'El nombre del evento debe tener al menos 3 caracteres.'})
+    fecha_inicio = forms.DateField(error_messages={'required': 'La fecha de inicio es obligatoria.',
+                                                   'invalid': 'La fecha de inicio no es válida.'})
+    fecha_fin = forms.DateField(error_messages={'required': 'La fecha de fin es obligatoria.',
+                                                'invalid': 'La fecha de fin no es válida.'})
+    lugar_entrega = forms.CharField(min_length=3, max_length=255,
+                                    error_messages={'required': 'El lugar de entrega es obligatorio.',
+                                                    'min_length': 'El lugar debe tener al menos 3 caracteres.'})
+    titulo_pub = forms.CharField(min_length=3, max_length=200,
+                                 error_messages={'required': 'El título de la publicación es obligatorio.',
+                                                 'min_length': 'El título debe tener al menos 3 caracteres.'})
+    contenido_pub = forms.CharField(min_length=10, max_length=500,
+                                    error_messages={'required': 'El contenido es obligatorio.',
+                                                    'min_length': 'El contenido debe tener al menos 10 caracteres.'})
+    estado_evento = forms.ChoiceField(choices=ESTADOS_EVENTO, required=False,
+                                      error_messages={'invalid_choice': 'El estado del evento no es válido.'})
+    imagen_pub = forms.ImageField(required=False, error_messages={'invalid_image': 'La imagen no es válida.'})
+
+    def __init__(self, *args, nuevo=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Al crear no se aceptan fechas pasadas; al editar sí (un evento ya iniciado se puede corregir).
+        self.nuevo = nuevo
+
+    def clean(self):
+        datos = super().clean()
+        inicio, fin = datos.get('fecha_inicio'), datos.get('fecha_fin')
+        if self.nuevo:
+            if inicio and inicio < date.today():
+                self.add_error('fecha_inicio', 'No se pueden crear eventos con fechas pasadas. '
+                                               'Selecciona hoy o una fecha futura.')
+            elif fin and fin < date.today():
+                self.add_error('fecha_fin', 'La fecha de fin debe ser hoy o una fecha futura, '
+                                            'y no puede ser anterior a la de inicio.')
+        if inicio and fin and fin < inicio and 'fecha_fin' not in self.errors:
+            self.add_error('fecha_fin', 'La fecha de fin no puede ser anterior a la de inicio.')
+        return datos
+
+
+class EstadoEventoForm(forms.Form):
+    estado = forms.ChoiceField(choices=ESTADOS_EVENTO, error_messages={'required': 'Selecciona un estado.',
+                                                                         'invalid_choice': 'El estado no es válido.'})
+
+
+class EstadoGestionForm(forms.Form):
+    """Cambio de estado de una donación o solicitud, con observación opcional."""
+    estado = forms.ChoiceField(choices=ESTADOS_DONACION, error_messages={'required': 'Selecciona un estado.',
+                                                                           'invalid_choice': 'El estado no es válido.'})
+    observacion = forms.CharField(required=False, max_length=250,
+                                  error_messages={'max_length': 'La observación no puede superar 250 caracteres.'})
+
+    def clean(self):
+        datos = super().clean()
+        # Regla que el JS ya exigía en pantalla; ahora también en el servidor.
+        if datos.get('estado') == 'rechazada' and not (datos.get('observacion') or '').strip():
+            self.add_error('observacion', 'La observación es obligatoria al rechazar.')
+        return datos
+
+
+class EstadoVisitaForm(forms.Form):
+    estado = forms.ChoiceField(choices=[(v, v) for v in ('aprobada', 'rechazada', 'realizada', 'cancelada')],
+                               error_messages={'required': 'Selecciona un estado.',
+                                               'invalid_choice': 'El estado no es válido.'})
+    observacion = forms.CharField(required=False, max_length=500)
+
+
+class ClienteCrearForm(RegistroForm):
+    """Alta de un donante/solicitante hecha por el personal (no acepta términos: es presencial)."""
+    aceptaTerminos = None
+    prioridad = forms.ChoiceField(choices=PRIORIDADES_VALIDAS, required=False,
+                                  error_messages={'invalid_choice': 'La prioridad no es válida.'})
+    observacion_visita = forms.CharField(required=False, max_length=500)
+
+    def clean_fechaNacimiento(self):
+        fecha = self.cleaned_data['fechaNacimiento']
+        if fecha > date.today() or calcular_edad(fecha) < 14:
+            raise ValidationError('El cliente debe tener al menos 14 años.')
+        return fecha
+
+
+class ClienteEditarForm(forms.Form):
+    """Solo campos NO sensibles de un donante (los de identidad van por corrección)."""
+    email = forms.EmailField(max_length=150, error_messages={'required': 'El correo es obligatorio.',
+                                                               'invalid': 'Escribe un correo electrónico válido.'})
+    telefono = forms.RegexField(regex=r'^\d{10}$', error_messages={'required': 'El teléfono es obligatorio.',
+                                                                    'invalid': 'El teléfono debe tener 10 dígitos.'})
+    direccion = forms.CharField(min_length=5, max_length=255,
+                                error_messages={'required': 'La dirección es obligatoria.',
+                                                'min_length': 'La dirección debe tener al menos 5 caracteres.'})
+    necesidad = forms.CharField(required=False, max_length=255)
+    prioridad = forms.ChoiceField(choices=PRIORIDADES_VALIDAS, required=False,
+                                  error_messages={'invalid_choice': 'La prioridad no es válida.'})
+    observacion_visita = forms.CharField(required=False, max_length=500)
+    password = forms.CharField(required=False, max_length=30)
+    password_confirmation = forms.CharField(required=False)
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        if Usuario.objects.filter(email__iexact=email).exclude(pk=self.usuario.pk).exists():
+            raise ValidationError('Ese correo ya está registrado por otra cuenta.')
+        return email
+
+    def clean(self):
+        datos = super().clean()
+        clave = datos.get('password')
+        if clave:
+            if clave != datos.get('password_confirmation'):
+                self.add_error('password', 'Las contraseñas no coinciden.')
+            else:
+                try:
+                    validate_password(clave, self.usuario)
+                except ValidationError as e:
+                    self.add_error('password', e)
+        return datos
+
+
+class PerfilPersonalForm(forms.Form):
+    """Perfil propio del personal (asistente/administrador): datos de contacto únicamente."""
+    email = forms.EmailField(max_length=150, error_messages={'required': 'El correo es obligatorio.',
+                                                               'invalid': 'Escribe un correo electrónico válido.'})
+    telefono = forms.RegexField(regex=r'^\d{10}$', error_messages={'required': 'El teléfono es obligatorio.',
+                                                                    'invalid': 'El teléfono debe tener 10 dígitos.'})
+    direccion = forms.CharField(min_length=5, max_length=255,
+                                error_messages={'required': 'La dirección es obligatoria.',
+                                                'min_length': 'La dirección debe tener al menos 5 caracteres.'})
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        if Usuario.objects.filter(email__iexact=email).exclude(pk=self.usuario.pk).exists():
+            raise ValidationError('Ese correo ya está registrado por otra cuenta.')
+        return email
+
+
+class ConfirmarPasswordForm(forms.Form):
+    codigo = forms.RegexField(regex=r'^\d{6}$', error_messages={'required': 'Ingresa el código de 6 dígitos.',
+                                                                 'invalid': 'El código debe tener 6 dígitos.'})
+    password = forms.CharField(max_length=30, error_messages={'required': 'La nueva contraseña es obligatoria.'})
+    password_confirmation = forms.CharField(error_messages={'required': 'Debes repetir la contraseña.'})
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean(self):
+        datos = super().clean()
+        clave = datos.get('password')
+        if clave:
+            if clave != datos.get('password_confirmation'):
+                self.add_error('password', 'Las contraseñas no coinciden.')
+            else:
+                try:
+                    validate_password(clave, self.usuario)
+                except ValidationError as e:
+                    self.add_error('password', e)
+        return datos

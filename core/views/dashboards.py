@@ -13,8 +13,3 @@ def _panel(request, titulo):
 @rol_requerido('administrador')
 def dashboard_administrador(request):
     return _panel(request, 'Panel del Administrador')
-
-
-@rol_requerido('asistente')
-def dashboard_asistente(request):
-    return _panel(request, 'Panel del Asistente')
