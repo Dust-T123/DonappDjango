@@ -83,10 +83,17 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         if self.rol != 'donante' and (self.necesidad or self.prioridad):
             raise ValidationError('Solo los donantes pueden tener necesidad o prioridad.')
 
+    # Campos que intervienen en las reglas de clean(): solo si se tocan hay que validar.
+    CAMPOS_VALIDADOS = frozenset({'fecha_nacimiento', 'rol', 'necesidad', 'prioridad'})
+
     def save(self, *args, **kwargs):
         # El trigger de PostgreSQL ya no existe: la regla de los 14 años y la de
-        # necesidad/prioridad se validan aquí en cada guardado.
-        self.clean()
+        # necesidad/prioridad se validan aquí al guardar.
+        # Un guardado parcial que no toca esos campos (re-hash de la contraseña al iniciar
+        # sesión, activar/desactivar...) no debe fallar por un dato antiguo que ya no cumple.
+        campos = kwargs.get('update_fields')
+        if campos is None or self.CAMPOS_VALIDADOS & set(campos):
+            self.clean()
         super().save(*args, **kwargs)
 
     @property
