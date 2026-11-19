@@ -18,10 +18,10 @@ from django.views.decorators.http import require_POST
 
 from ..decorators import rol_requerido
 from ..forms import (
-    CorreccionForm, DonacionForm, NotaVisitaForm, PerfilDonanteForm,
+    DonacionForm, NotaVisitaForm, PerfilDonanteForm,
     SolicitudForm, VisitaForm,
 )
-from .comun import a_panel, crear_correccion, primer_error, url_imagen
+from .comun import a_panel, primer_error, procesar_correccion, url_imagen
 from ..models import (
     Categoria, CorreccionDatos, Donacion, DonacionUsuario, Evento, Solicitud,
     VisitaDomiciliaria, VisitaObservacion,
@@ -289,11 +289,6 @@ def perfil_actualizar(request):
 @rol_requerido('donante')
 @require_POST
 def perfil_solicitar_correccion(request):
-    form = CorreccionForm(request.POST, request.FILES)
-    if not form.is_valid():
-        messages.error(request, primer_error(form))
-        return a_panel('dashboard_usuario', 'perfil')
-    crear_correccion(request.user, request.user, form.cleaned_data)
-    messages.success(request, 'Tu solicitud de corrección fue enviada y quedará pendiente '
-                              'de aprobación por un administrador.')
-    return a_panel('dashboard_usuario', 'perfil')
+    return procesar_correccion(
+        request, request.user, a_panel('dashboard_usuario', 'perfil'),
+        'Tu solicitud de corrección fue enviada y quedará pendiente de aprobación por un administrador.')

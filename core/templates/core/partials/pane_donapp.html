@@ -1,0 +1,102 @@
+        {# ══ DONACIONES / SOLICITUDES ══ #}
+        <div id="donapp" class="tab-pane">
+            <h2 class="page-title">Donaciones y Solicitudes</h2>
+            <div class="tabs-inner">
+                <button class="tab-btn {% if not ver_sol %}active{% endif %}" onclick="switchInner(this,'don-panel')">Donaciones</button>
+                <button class="tab-btn {% if ver_sol %}active{% endif %}" onclick="switchInner(this,'sol-panel')">Solicitudes</button>
+            </div>
+
+            <div id="don-panel" class="inner-panel" {% if ver_sol %}style="display:none"{% endif %}>
+                <form method="GET" action="{% url ruta.panel %}" class="filter-bar" style="margin-bottom:16px">
+                    <input type="hidden" name="tab" value="donapp">
+                    <input type="text" name="don_search" placeholder="🔍 Buscar por descripción o donante..."
+                           value="{{ request.GET.don_search }}" class="form-input search-input" maxlength="200">
+                    <select name="don_estado" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        {% for v, e in estados_gestion %}<option value="{{ v }}" {% if request.GET.don_estado == v %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                    <select name="don_cat" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="0">Todas las categorías</option>
+                        {% for cat in todas_categorias %}<option value="{{ cat.id }}" {% if request.GET.don_cat == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>{% endfor %}
+                    </select>
+                    <select name="don_sort" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Más recientes</option>
+                        <option value="az" {% if request.GET.don_sort == 'az' %}selected{% endif %}>Descripción A-Z</option>
+                        <option value="za" {% if request.GET.don_sort == 'za' %}selected{% endif %}>Descripción Z-A</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                    {% if request.GET.don_search or request.GET.don_estado or request.GET.don_cat or request.GET.don_sort %}
+                        <a href="{% url ruta.panel %}#donapp" class="btn btn-secondary btn-sm">Limpiar</a>
+                    {% endif %}
+                </form>
+                <div class="card"><div class="table-wrap"><table>
+                    <thead><tr><th>#</th><th>Descripción</th><th>Categoría</th><th>Stock</th><th>Estado</th><th>Fecha</th><th>Donante</th><th>Observación</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for d in donaciones %}
+                        <tr>
+                            <td>{{ d.id }}</td>
+                            <td class="td-desc">{{ d.descripcion }}</td>
+                            <td>{{ d.categoria.nombre|default:"—" }}</td>
+                            <td>{{ d.stock }}</td>
+                            <td><span class="badge estado-{{ d.estado }}">{{ d.estado }}</span></td>
+                            <td>{{ d.fecha|date:"d/m/Y"|default:"—" }}</td>
+                            <td>{{ d.donante_nombre|default:"—" }}</td>
+                            <td class="td-obs">{{ d.observacion|default:"—" }}</td>
+                            <td><button type="button" data-json="{{ d.json }}" onclick="abrirModalDonacion(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i></button></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" class="empty-row">No se encontraron donaciones.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div></div>
+            </div>
+
+            <div id="sol-panel" class="inner-panel" {% if not ver_sol %}style="display:none"{% endif %}>
+                <form method="GET" action="{% url ruta.panel %}" class="filter-bar" style="margin-bottom:16px">
+                    <input type="hidden" name="tab" value="donapp">
+                    <input type="text" name="sol_search" placeholder="🔍 Buscar por descripción o solicitante..."
+                           value="{{ request.GET.sol_search }}" class="form-input search-input" maxlength="200">
+                    <select name="sol_estado" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        {% for v, e in estados_gestion %}<option value="{{ v }}" {% if request.GET.sol_estado == v %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                    <select name="sol_cat" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="0">Todas las categorías</option>
+                        {% for cat in todas_categorias %}<option value="{{ cat.id }}" {% if request.GET.sol_cat == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>{% endfor %}
+                    </select>
+                    <select name="sol_sort" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Más recientes</option>
+                        <option value="az" {% if request.GET.sol_sort == 'az' %}selected{% endif %}>Descripción A-Z</option>
+                        <option value="prioridad" {% if request.GET.sol_sort == 'prioridad' %}selected{% endif %}>Prioridad del beneficiario</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                    {% if request.GET.sol_search or request.GET.sol_estado or request.GET.sol_cat or request.GET.sol_sort %}
+                        <a href="{% url ruta.panel %}#donapp" class="btn btn-secondary btn-sm">Limpiar</a>
+                    {% endif %}
+                </form>
+                <div class="card"><div class="table-wrap"><table>
+                    <thead><tr><th>#</th><th>Descripción</th><th>Categoría</th><th>Estado</th><th>Fecha</th><th>Solicitante</th><th>Gestor</th><th>Observación</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for s in solicitudes %}
+                        <tr>
+                            <td>{{ s.id }}</td>
+                            <td class="td-desc">{{ s.descripcion }}</td>
+                            <td>{{ s.categoria.nombre|default:"—" }}</td>
+                            <td><span class="badge estado-{{ s.estado }}">{{ s.estado }}</span></td>
+                            <td>{{ s.fecha_creacion|date:"d/m/Y" }}</td>
+                            <td>
+                                {{ s.solicitante.nombre|default:"—" }}
+                                {% if s.solicitante.prioridad %}<span class="badge prioridad-{{ s.solicitante.prioridad }}" title="Prioridad del beneficiario">{{ s.solicitante.prioridad|capfirst }}</span>{% endif %}
+                            </td>
+                            <td>{{ s.gestor.nombre|default:"—" }}</td>
+                            <td class="td-obs">{{ s.observacion|default:"—" }}</td>
+                            <td><button type="button" data-json="{{ s.json }}" onclick="abrirModalSolicitud(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i></button></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" class="empty-row">No se encontraron solicitudes.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div></div>
+            </div>
+        </div>
+

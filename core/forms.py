@@ -455,3 +455,36 @@ class ConfirmarPasswordForm(forms.Form):
                 except ValidationError as e:
                     self.add_error('password', e)
         return datos
+
+
+# ── FORMULARIOS EXCLUSIVOS DEL ADMINISTRADOR ─────────────────────────────────
+
+ROLES_VALIDOS = [(v, v) for v in ('administrador', 'asistente', 'donante')]
+ESTADOS_CUENTA = [(v, v) for v in ('activo', 'inactivo')]
+
+
+class UsuarioAdminCrearForm(ClienteCrearForm):
+    """Alta de cualquier usuario (incluido personal). Necesidad/prioridad solo aplican a donantes."""
+    rol = forms.ChoiceField(choices=ROLES_VALIDOS, error_messages={'required': 'Selecciona un rol.',
+                                                                   'invalid_choice': 'El rol no es válido.'})
+    estado = forms.ChoiceField(choices=ESTADOS_CUENTA, error_messages={'required': 'Selecciona un estado.',
+                                                                       'invalid_choice': 'El estado no es válido.'})
+
+    def clean_fechaNacimiento(self):
+        fecha = self.cleaned_data['fechaNacimiento']
+        if fecha > date.today() or calcular_edad(fecha) < 14:
+            raise ValidationError('El usuario debe tener al menos 14 años.')
+        return fecha
+
+
+class UsuarioAdminEditarForm(ClienteEditarForm):
+    """Edición de un usuario por el administrador: contacto, rol, estado y (si es donante) seguimiento."""
+    rol = forms.ChoiceField(choices=ROLES_VALIDOS, error_messages={'required': 'Selecciona un rol.',
+                                                                   'invalid_choice': 'El rol no es válido.'})
+    estado = forms.ChoiceField(choices=ESTADOS_CUENTA, error_messages={'required': 'Selecciona un estado.',
+                                                                       'invalid_choice': 'El estado no es válido.'})
+
+
+class RechazoCorreccionForm(forms.Form):
+    motivo = forms.CharField(required=False, max_length=300,
+                             error_messages={'max_length': 'El motivo no puede superar 300 caracteres.'})

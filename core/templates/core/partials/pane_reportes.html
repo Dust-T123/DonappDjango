@@ -1,0 +1,33 @@
+        {# ══ REPORTES ══ #}
+        <div id="reportes" class="tab-pane">
+            <h2 class="page-title">Generador de Reportes PDF</h2>
+            <div class="reportes-grid">
+                <div class="card reporte-card">
+                    <div class="reporte-icon"><i class="fa-solid fa-box-open"></i></div>
+                    <h3>Reporte de Donaciones</h3>
+                    <p>Genera un PDF con el listado detallado de donaciones según los criterios que elijas.</p>
+                    <div class="reporte-filters">
+                        <label>Estado:</label>
+                        <select id="rpt_don_estado" class="form-input"><option value="todos">Todos</option><option value="aprobada">Aprobadas</option><option value="rechazada">Rechazadas</option><option value="pendiente">Pendientes</option><option value="completada">Completadas</option><option value="cancelada">Canceladas</option></select>
+                        <label>Fecha desde:</label><input type="date" id="rpt_don_desde" class="form-input">
+                        <label>Fecha hasta:</label><input type="date" id="rpt_don_hasta" class="form-input">
+                    </div>
+                    <button class="btn btn-primary" onclick="generarReporteDonaciones()"><i class="fa-solid fa-file-pdf"></i> Generar PDF</button>
+                </div>
+                <div class="card reporte-card">
+                    <div class="reporte-icon blue"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <h3>Reporte de Solicitudes</h3>
+                    <p>Genera un PDF con el detalle de solicitudes completadas o según el estado que selecciones.</p>
+                    <div class="reporte-filters">
+                        <label>Estado:</label>
+                        <select id="rpt_sol_estado" class="form-input"><option value="todos">Todos</option><option value="aprobada">Aprobadas</option><option value="rechazada">Rechazadas</option><option value="pendiente">Pendientes</option><option value="completada">Completadas</option><option value="cancelada">Canceladas</option></select>
+                        <label>Fecha desde:</label><input type="date" id="rpt_sol_desde" class="form-input">
+                        <label>Fecha hasta:</label><input type="date" id="rpt_sol_hasta" class="form-input">
+                    </div>
+                    <button class="btn btn-primary" onclick="generarReporteSolicitudes()"><i class="fa-solid fa-file-pdf"></i> Generar PDF</button>
+                </div>
+            </div>
+            {{ reporte_donaciones|json_script:"donacionesData" }}
+            {{ reporte_solicitudes|json_script:"solicitudesData" }}
+        </div>
+

@@ -1,0 +1,50 @@
+        {# ══ VISITAS DOMICILIARIAS ══ #}
+        <div id="visitas" class="tab-pane">
+            <div class="section-header"><h2 class="page-title">Visitas Domiciliarias</h2></div>
+            <div class="card">
+                <form method="GET" action="{% url ruta.panel %}" class="filter-bar" style="margin-bottom:16px">
+                    <input type="hidden" name="tab" value="visitas">
+                    <select name="vis_estado" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        {% for v, e in estados_visita %}<option value="{{ v }}" {% if request.GET.vis_estado == v %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                    <select name="vis_sort" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Más recientes / pendientes primero</option>
+                        <option value="az" {% if request.GET.vis_sort == 'az' %}selected{% endif %}>Ordenar por beneficiario</option>
+                    </select>
+                    {% if request.GET.vis_estado or request.GET.vis_sort %}
+                        <a href="{% url ruta.panel %}#visitas" class="btn btn-secondary btn-sm">Limpiar</a>
+                    {% endif %}
+                </form>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>#</th><th>Beneficiario</th><th>Dirección</th><th>Motivo</th>
+                        <th>Fecha preferida</th><th>Estado</th><th>Observación</th><th>Gestor</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        {% for v in visitas %}
+                        <tr>
+                            <td>{{ v.id }}</td>
+                            <td>{{ v.usuario.nombre|default:"—" }}
+                                {% if v.usuario.prioridad %}<span class="badge prioridad-{{ v.usuario.prioridad }}">{{ v.usuario.prioridad|capfirst }}</span>{% endif %}</td>
+                            <td class="td-desc">{{ v.direccion }}</td>
+                            <td class="td-desc">{{ v.motivo }}</td>
+                            <td>{{ v.fecha_preferida|date:"d/m/Y"|default:"—" }}</td>
+                            <td><span class="badge estado-{{ v.estado }}">{{ v.estado }}</span></td>
+                            <td class="td-obs">{{ v.ultima_nota|default:"—" }}</td>
+                            <td>{{ v.gestor.nombre|default:"—" }}</td>
+                            <td class="td-actions">
+                                <button type="button" class="btn btn-sm {% if v.editable %}btn-primary{% else %}btn-secondary{% endif %}"
+                                        data-json="{{ v.json }}" onclick="abrirModalVisita(JSON.parse(this.dataset.json))"
+                                        title="{% if v.editable %}Gestionar visita{% else %}Ver detalles y bitácora{% endif %}">
+                                    <i class="fa-solid {% if v.editable %}fa-pen-to-square{% else %}fa-eye{% endif %}"></i>
+                                    {% if v.editable %}Gestionar{% else %}Ver bitácora{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" class="empty-row">No hay visitas domiciliarias registradas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+

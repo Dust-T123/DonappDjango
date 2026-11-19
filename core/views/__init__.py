@@ -7,7 +7,6 @@ from .auth import (  # noqa: F401
     logout_view,
     registro_view,
 )
-from .dashboards import dashboard_administrador  # noqa: F401
 from .public import index, terminos  # noqa: F401
 from .usuario import (  # noqa: F401
     dashboard_usuario,
@@ -24,14 +23,16 @@ from .usuario import (  # noqa: F401
     visita_nota,
 )
 from .asistente import (  # noqa: F401
-    categoria_crear,
-    categoria_editar,
     cliente_crear,
     cliente_editar,
     cliente_historial,
     cliente_solicitar_correccion,
     cliente_toggle_estado,
     dashboard_asistente,
+)
+from .gestion import (  # noqa: F401
+    categoria_crear,
+    categoria_editar,
     donacion_estado,
     evento_crear,
     evento_editar,
@@ -41,6 +42,18 @@ from .asistente import (  # noqa: F401
     solicitud_estado,
     visita_estado,
 )
-from .asistente import perfil_actualizar as asis_perfil_actualizar  # noqa: F401
-from .asistente import perfil_solicitar_correccion as asis_perfil_solicitar_correccion  # noqa: F401
-from .asistente import visita_nota as asis_visita_nota  # noqa: F401
+from .gestion import perfil_actualizar as gestion_perfil_actualizar  # noqa: F401
+from .gestion import perfil_solicitar_correccion as gestion_perfil_solicitar_correccion  # noqa: F401
+from .gestion import visita_nota as gestion_visita_nota  # noqa: F401
+from .administrador import (  # noqa: F401
+    categoria_eliminar,
+    correccion_aprobar,
+    correccion_rechazar,
+    correccion_soporte,
+    dashboard_administrador,
+    evento_eliminar,
+    usuario_crear,
+    usuario_editar,
+    usuario_solicitar_correccion,
+    usuario_toggle_estado,
+)

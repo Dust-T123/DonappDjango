@@ -33,3 +33,16 @@ def enviar_codigo_password(usuario, codigo):
     """Envía el código de 6 dígitos. Aquí SÍ se propaga el error: el usuario debe saber si no llegó."""
     _enviar(usuario.email, 'Donapp – Código para cambiar tu contraseña', 'codigo_cambio_password',
             {'nombre': usuario.nombre, 'codigo': codigo})
+
+
+def notificar_correccion(usuario, campo, resultado, valor_nuevo='', motivo=''):
+    """Avisa al usuario si su solicitud de corrección de datos fue aprobada o rechazada.
+    Como en Laravel, un fallo de correo no debe impedir la resolución."""
+    try:
+        _enviar(usuario.email, f'Donapp – Tu solicitud de corrección fue {resultado}', 'notificacion_correccion',
+                {'nombre': usuario.nombre, 'campo': campo, 'resultado': resultado,
+                 'valor_nuevo': valor_nuevo, 'motivo': motivo})
+        return True
+    except Exception:
+        logger.exception('No se pudo enviar la notificación de corrección a %s', usuario.email)
+        return False

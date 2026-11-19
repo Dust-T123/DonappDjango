@@ -1,0 +1,54 @@
+        {# ══ STOCK DISPONIBLE ══ #}
+        <div id="stock" class="tab-pane">
+            <div class="section-header">
+                <h2 class="page-title">Stock Disponible en la Fundación</h2>
+                <p class="page-subtitle">Suma de todas las donaciones <strong>aprobadas</strong>, agrupadas por artículo — lo que hay listo para asignar a un beneficiario.</p>
+            </div>
+            <div class="stats-grid" style="margin-bottom:20px">
+                <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    <div class="stat-info"><h3>{{ total_unidades_inventario }}</h3><p>Unidades totales disponibles</p></div></div>
+                <div class="stat-card"><div class="stat-icon blue"><i class="fa-solid fa-list"></i></div>
+                    <div class="stat-info"><h3>{{ inventario|length }}</h3><p>Artículos distintos en stock</p></div></div>
+            </div>
+            <div class="card">
+                <form method="GET" action="{% url ruta.panel %}" class="filter-bar" style="margin-bottom:16px">
+                    <input type="hidden" name="tab" value="stock">
+                    <input type="text" name="inv_search" placeholder="🔍 Buscar artículo..." value="{{ request.GET.inv_search }}" class="form-input search-input" maxlength="200">
+                    <select name="inv_cat" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="0">Todas las categorías</option>
+                        {% for cat in todas_categorias %}<option value="{{ cat.id }}" {% if request.GET.inv_cat == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>{% endfor %}
+                    </select>
+                    <select name="inv_sort" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Mayor cantidad primero</option>
+                        <option value="az" {% if request.GET.inv_sort == 'az' %}selected{% endif %}>Artículo A-Z</option>
+                        <option value="za" {% if request.GET.inv_sort == 'za' %}selected{% endif %}>Artículo Z-A</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+                    {% if request.GET.inv_search or request.GET.inv_cat or request.GET.inv_sort %}
+                        <a href="{% url ruta.panel %}#stock" class="btn btn-secondary btn-sm">Limpiar</a>
+                    {% endif %}
+                </form>
+                {% if not inventario %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="fa-solid fa-box-open"></i></div>
+                    <h3>Sin stock disponible</h3>
+                    <p>Aún no hay donaciones aprobadas para mostrar en el inventario.</p>
+                </div>
+                {% else %}
+                <div class="table-wrap"><table>
+                    <thead><tr><th>Artículo</th><th>Categoría</th><th>Cantidad disponible</th><th># Donaciones que lo componen</th></tr></thead>
+                    <tbody>
+                        {% for item in inventario %}
+                        <tr>
+                            <td class="td-desc">{{ item.descripcion }}</td>
+                            <td>{{ item.categoria__nombre|default:"—" }}</td>
+                            <td><span class="badge estado-aprobada" style="font-size:0.95rem">{{ item.total_stock }} disponibles</span></td>
+                            <td>{{ item.num_donaciones }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+                {% endif %}
+            </div>
+        </div>
+
