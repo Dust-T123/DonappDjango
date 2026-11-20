@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from ..forms import DonappPasswordResetForm, RegistroForm
 from ..models import Usuario
-from ..utils import ruta_por_rol
+from ..utils import PANEL_POR_ROL, ruta_por_rol
 from functools import wraps
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -116,6 +116,10 @@ def login_view(request):
             messages.error(request, 'No encontramos una cuenta con ese correo electrónico.')
         elif not usuario.is_active:
             messages.error(request, 'Tu acceso ha sido restringido por el administrador.')
+        elif usuario.rol not in PANEL_POR_ROL:
+            messages.error(request, 'Tu cuenta tiene un rol no válido. Comunícate con el administrador.')
+        elif not usuario.check_password(contrasena):
+            messages.error(request, 'Contraseña incorrecta. Verifica tus credenciales.')
         else:
             # Compatibilidad con hashes de Laravel ($2y$/$2a$), Django (pbkdf2/bcrypt) y texto plano
             hash_db = getattr(usuario, 'contrasena', usuario.password)
