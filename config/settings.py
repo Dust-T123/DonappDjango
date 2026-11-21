@@ -84,7 +84,11 @@ LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'login'
 
 # El primer hasher es el que se usa para contraseñas nuevas. BCrypt va después
-# para poder leer los hashes importados desde Laravel (formato "bcrypt$2b$...").
+# para poder leer los hashes importados desde Laravel. OJO: Laravel guarda "$2y$10$...",
+# que Django NO reconoce tal cual; tras importar usuarios hay que correr
+#     python manage.py normalizar_hashes_laravel
+# que los deja como "bcrypt$$2b$10$...". En el primer login de cada usuario Django los
+# vuelve a hashear con PBKDF2 automáticamente. Mantén bcrypt==4.2.1 (ver requirements.txt).
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
@@ -138,3 +142,7 @@ if _email_backend.endswith('smtp.EmailBackend'):
     }
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Donapp <no-reply@donapp.local>')
+
+# Archivos privados (p. ej. documentos de identidad de las solicitudes de corrección).
+# Fuera de MEDIA_ROOT para que nunca se sirvan públicamente.
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'storage_privado'

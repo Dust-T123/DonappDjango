@@ -51,6 +51,7 @@ class UsuarioManager(BaseUserManager):
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
+    id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100, blank=True, default='')
     tipo_documento = models.CharField(max_length=10, choices=TIPOS_DOCUMENTO)
@@ -58,6 +59,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     fecha_nacimiento = models.DateField(validators=[validar_edad_minima])
     direccion = models.CharField(max_length=255)
     email = models.EmailField(max_length=150, unique=True)
+    password = models.CharField(max_length=255)
     telefono = models.CharField(max_length=15)
     necesidad = models.CharField(max_length=255, null=True, blank=True)
     prioridad = models.CharField(max_length=10, choices=PRIORIDADES, null=True, blank=True)
@@ -71,12 +73,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['nombre', 'tipo_documento', 'num_documento', 'fecha_nacimiento', 'direccion', 'telefono']
 
     class Meta:
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(rol='donante') | models.Q(necesidad__isnull=True, prioridad__isnull=True),
-                name='chk_solo_donante_necesidad',
-            )
-        ]
+        db_table = 'core_usuario'  # Apunta a la tabla física real en PostgreSQL
+
 
     def clean(self):
         super().clean()
@@ -85,10 +83,17 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         if self.rol != 'donante' and (self.necesidad or self.prioridad):
             raise ValidationError('Solo los donantes pueden tener necesidad o prioridad.')
 
+    # Campos que intervienen en las reglas de clean(): solo si se tocan hay que validar.
+    CAMPOS_VALIDADOS = frozenset({'fecha_nacimiento', 'rol', 'necesidad', 'prioridad'})
+
     def save(self, *args, **kwargs):
         # El trigger de PostgreSQL ya no existe: la regla de los 14 años y la de
-        # necesidad/prioridad se validan aquí en cada guardado.
-        self.clean()
+        # necesidad/prioridad se validan aquí al guardar.
+        # Un guardado parcial que no toca esos campos (re-hash de la contraseña al iniciar
+        # sesión, activar/desactivar...) no debe fallar por un dato antiguo que ya no cumple.
+        campos = kwargs.get('update_fields')
+        if campos is None or self.CAMPOS_VALIDADOS & set(campos):
+            self.clean()
         super().save(*args, **kwargs)
 
     @property
@@ -106,12 +111,14 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f'{self.nombre} {self.apellido}'.strip()
 
-
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100)
     creado_por = models.ForeignKey(
         Usuario, null=True, blank=True, on_delete=models.SET_NULL, related_name='categorias_creadas'
     )
+
+    class Meta:
+        db_table = 'core_categoria'
 
     def __str__(self):
         return self.nombre
@@ -128,6 +135,7 @@ class Evento(models.Model):
     estado = models.CharField(max_length=15, choices=ESTADOS_EVENTO, default='borrador')
 
     class Meta:
+        db_table = 'core_evento'
         constraints = [
             models.CheckConstraint(
                 condition=(
@@ -155,6 +163,7 @@ class Donacion(models.Model):
     )
 
     class Meta:
+        db_table = 'core_donacion'
         verbose_name_plural = 'donaciones'
         constraints = [
             models.CheckConstraint(
@@ -184,6 +193,7 @@ class Solicitud(models.Model):
     )
 
     class Meta:
+        db_table = 'core_solicitud'
         verbose_name_plural = 'solicitudes'
 
     def clean(self):
@@ -208,6 +218,9 @@ class DonacionUsuario(models.Model):
         Donacion, null=True, blank=True, on_delete=models.SET_NULL, related_name='donantes'
     )
 
+    class Meta:
+        db_table = 'core_donacionusuario'
+
     def clean(self):
         if self.donante and self.donante.rol != 'donante':
             raise ValidationError('Solo los usuarios con rol donante pueden realizar donaciones.')
@@ -231,6 +244,7 @@ class VisitaDomiciliaria(models.Model):
     fecha_resolucion = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        db_table = 'core_visitadomiciliaria'
         verbose_name_plural = 'visitas domiciliarias'
         indexes = [models.Index(fields=['usuario', 'estado'])]
 
@@ -244,6 +258,7 @@ class VisitaObservacion(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'core_visitaobservacion'
         verbose_name_plural = 'observaciones de visita'
 
 
@@ -269,4 +284,5 @@ class CorreccionDatos(models.Model):
     consentimiento = models.BooleanField(default=False)
 
     class Meta:
+        db_table = 'core_correcciondatos'
         verbose_name_plural = 'correcciones de datos'

@@ -1,0 +1,12 @@
+{% autoescape off %}Hola, {{ nombre }}
+
+Tu solicitud de corrección del dato "{{ campo }}" fue {{ resultado|upper }}.
+{% if resultado == 'aprobada' %}
+El nuevo valor registrado es: {{ valor_nuevo }}
+{% elif motivo %}
+Motivo: {{ motivo }}
+{% endif %}
+Por tu seguridad, el documento de identidad que adjuntaste ya fue eliminado de nuestros sistemas.
+
+Equipo Donapp
+{% endautoescape %}

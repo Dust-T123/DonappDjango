@@ -1,0 +1,51 @@
+        {# ══ EVENTOS ══ #}
+        <div id="eventos" class="tab-pane">
+            <div class="section-header">
+                <h2 class="page-title">Gestión de Eventos</h2>
+                <button class="btn btn-primary" onclick="abrirModalCrearEvento()"><i class="fa-solid fa-plus"></i> Nuevo Evento</button>
+            </div>
+            <div class="card">
+                <form method="GET" action="{% url ruta.panel %}" class="filter-bar" style="margin-bottom:16px">
+                    <input type="hidden" name="tab" value="eventos">
+                    <input type="text" name="ev_search" placeholder="🔍 Buscar evento por nombre..." value="{{ request.GET.ev_search }}" class="form-input search-input" maxlength="200">
+                    <select name="ev_estado" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        {% for v, e in estados_evento %}<option value="{{ v }}" {% if request.GET.ev_estado == v %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                    <select name="ev_sort" class="form-input sel-small" onchange="this.form.submit()">
+                        <option value="">Más recientes</option>
+                        <option value="az" {% if request.GET.ev_sort == 'az' %}selected{% endif %}>Nombre A-Z</option>
+                        <option value="za" {% if request.GET.ev_sort == 'za' %}selected{% endif %}>Nombre Z-A</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                    {% if request.GET.ev_search or request.GET.ev_estado or request.GET.ev_sort %}
+                        <a href="{% url ruta.panel %}#eventos" class="btn btn-secondary btn-sm">Limpiar</a>
+                    {% endif %}
+                </form>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>#</th><th>Nombre</th><th>Fechas</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        {% for ev in eventos %}
+                        <tr>
+                            <td>{{ ev.id }}</td>
+                            <td>{{ ev.nombre }}</td>
+                            <td>{% if ev.fecha_inicio %}{{ ev.fecha_inicio|date:"d/m/Y" }}{% if ev.multidia %} – {{ ev.fecha_fin|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</td>
+                            <td>{{ ev.lugar|default:"—" }}</td>
+                            <td>
+                                <form action="{% url ruta.evento_estado ev.id %}" method="POST" style="display:inline">
+                                    {% csrf_token %}
+                                    <select name="estado" class="form-input sel-small badge-select estado-{{ ev.estado }}" onchange="this.form.submit()">
+                                        {% for v, e in estados_evento %}<option value="{{ v }}" {% if ev.estado == v %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="td-actions"><button type="button" data-json="{{ ev.json }}" onclick="abrirModalEditarEvento(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen"></i></button></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="empty-row">No se encontraron eventos.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+

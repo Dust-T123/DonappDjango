@@ -1,0 +1,138 @@
+<div id="modalDonacion" class="modal"><div class="modal-content">
+    <div class="modal-header"><h3><i class="fa-solid fa-box-open"></i> Gestionar Donación</h3>
+        <button class="modal-close" onclick="cerrarModal('modalDonacion')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="don_detalle" class="detalle-box"></div>
+    <form id="formDonacion" method="POST" onsubmit="return validarObservacionRequerida('don_estado','don_obs','don_obs_err')">
+        {% csrf_token %}
+        <input type="hidden" id="don_id">
+        <div class="form-group"><label>Estado</label>
+            <select name="estado" id="don_estado" class="form-input" onchange="actualizarHintObservacion('don_estado','don_obs_hint','don_obs','don_obs_err')">
+                <option value="pendiente">Pendiente</option><option value="aprobada">Aprobada</option><option value="rechazada">Rechazada</option><option value="completada">Completada</option><option value="cancelada">Cancelada</option>
+            </select></div>
+        <div class="form-group"><label>Observación <span id="don_obs_hint">(opcional)</span></label>
+            <textarea name="observacion" id="don_obs" class="form-input" rows="3" placeholder="Añade una observación..." maxlength="250"></textarea>
+            <small id="don_obs_err" class="field-error" style="display:none;"><i class="fa-solid fa-triangle-exclamation"></i> La observación es obligatoria al rechazar.</small></div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+            <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalDonacion')">Cancelar</button>
+        </div>
+    </form>
+</div></div>
+
+<div id="modalSolicitud" class="modal"><div class="modal-content">
+    <div class="modal-header"><h3><i class="fa-solid fa-clipboard-list"></i> Gestionar Solicitud</h3>
+        <button class="modal-close" onclick="cerrarModal('modalSolicitud')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="sol_detalle" class="detalle-box"></div>
+    <form id="formSolicitud" method="POST" onsubmit="return validarObservacionRequerida('sol_estado','sol_obs','sol_obs_err')">
+        {% csrf_token %}
+        <input type="hidden" id="sol_id">
+        <div class="form-group"><label>Estado</label>
+            <select name="estado" id="sol_estado" class="form-input" onchange="actualizarHintObservacion('sol_estado','sol_obs_hint','sol_obs','sol_obs_err')">
+                <option value="pendiente">Pendiente</option><option value="aprobada">Aprobada</option><option value="rechazada">Rechazada</option><option value="completada">Completada</option><option value="cancelada">Cancelada</option>
+            </select></div>
+        <div class="form-group"><label>Observación <span id="sol_obs_hint">(opcional)</span></label>
+            <textarea name="observacion" id="sol_obs" class="form-input" rows="3" placeholder="Añade una observación..." maxlength="250"></textarea>
+            <small id="sol_obs_err" class="field-error" style="display:none;"><i class="fa-solid fa-triangle-exclamation"></i> La observación es obligatoria al rechazar.</small></div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+            <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalSolicitud')">Cancelar</button>
+        </div>
+    </form>
+</div></div>
+
+<div id="modalVisita" class="modal"><div class="modal-content modal-lg">
+    <div class="modal-header"><h3 id="vis_titulo"><i class="fa-solid fa-house-chimney-user"></i> Gestionar Visita Domiciliaria</h3>
+        <button class="modal-close" onclick="cerrarModal('modalVisita')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="vis_detalle" class="detalle-box"></div>
+
+    <h4 style="margin:14px 0 6px"><i class="fa-solid fa-clock-rotate-left"></i> Bitácora</h4>
+    <div id="vis_historial" class="bitacora-box"></div>
+
+    <p id="vis_locked_msg" class="text-muted" style="display:none; font-size:0.85rem; margin:6px 0 0">
+        <i class="fa-solid fa-lock"></i> Esta visita ya fue finalizada; queda como constancia y su estado no se puede modificar. Aún puedes agregar una nota a la bitácora.
+    </p>
+
+    <form id="formVisita" method="POST">
+        {% csrf_token %}
+        <div class="form-group" id="vis_estado_group"><label>Estado</label>
+            <select name="estado" id="vis_estado" class="form-input">
+                <option value="aprobada">Aprobada</option>
+                <option value="rechazada">Rechazada</option>
+                <option value="realizada">Realizada</option>
+                <option value="cancelada">Cancelada</option>
+            </select></div>
+        <div class="form-group"><label>Agregar nota a la bitácora <small class="text-muted">(opcional, no borra las anteriores)</small></label>
+            <textarea name="observacion" id="vis_obs" class="form-input" rows="2" placeholder="Escribe una nueva nota..." maxlength="500"></textarea></div>
+        <div class="modal-footer">
+            <button type="submit" id="vis_submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+            <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalVisita')">Cancelar</button>
+        </div>
+    </form>
+</div></div>
+
+<div id="modalCrearEvento" class="modal"><div class="modal-content">
+    <div class="modal-header"><h3><i class="fa-solid fa-calendar-plus"></i> Publicar Nuevo Evento</h3>
+        <button class="modal-close" onclick="cerrarModal('modalCrearEvento')"><i class="fa-solid fa-xmark"></i></button></div>
+    <form action="{% url ruta.evento_crear %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid-2">
+            <div class="form-group"><label>Nombre del Evento *</label><input type="text" name="nombre_evento" class="form-input" required maxlength="150" placeholder="Nombre del evento"></div>
+            <div class="form-group"><label>Estado</label><select name="estado_evento" class="form-input">
+                <option value="borrador">Borrador</option><option value="publicado">Publicado</option>
+                <option value="en_curso">En curso</option><option value="finalizado">Finalizado</option>
+                <option value="cancelado">Cancelado</option></select></div>
+        </div>
+        <div class="form-grid-2">
+            <div class="form-group"><label>Fecha de inicio *</label><input type="date" name="fecha_inicio" class="form-input" required min="{{ hoy|date:'Y-m-d' }}"></div>
+            <div class="form-group"><label>Fecha de fin *</label><input type="date" name="fecha_fin" class="form-input" required min="{{ hoy|date:'Y-m-d' }}">
+                <p class="form-hint"><i class="fa-solid fa-circle-info"></i> Usa la misma fecha si dura un solo día.</p></div>
+        </div>
+        <div class="form-grid-2">
+            <div class="form-group"><label>Lugar de Entrega *</label><input type="text" name="lugar_entrega" class="form-input" required maxlength="255" value="Transversal 73 H Bis #75B 46 SUR Barrio Sierra Morena V Sector"></div>
+        </div>
+        <hr>
+        <div class="form-group"><label>Título de la Publicación *</label><input type="text" name="titulo_pub" class="form-input" required maxlength="200" placeholder="Título de la publicación"></div>
+        <div class="form-group"><label>Contenido / Detalles *</label><textarea name="contenido_pub" class="form-input" rows="3" required maxlength="500" placeholder="Describe los detalles del evento"></textarea></div>
+        <div class="form-group"><label>Imagen (Opcional)</label><input type="file" name="imagen_pub" class="form-input" accept="image/*"></div>
+        <div class="modal-footer">
+            <button type="submit" name="crear_evento_completo" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Crear y Publicar</button>
+            <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalCrearEvento')">Cancelar</button>
+        </div>
+    </form>
+</div></div>
+
+<div id="modalEditarEvento" class="modal"><div class="modal-content modal-lg">
+    <div class="modal-header"><h3><i class="fa-solid fa-calendar-check"></i> Editar Evento y Publicación</h3>
+        <button class="modal-close" onclick="cerrarModal('modalEditarEvento')"><i class="fa-solid fa-xmark"></i></button></div>
+    <form id="formEditarEvento" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="idEvento" id="edit_idEvento">
+        <div class="form-grid-2">
+            <div class="form-group"><label>Nombre del Evento</label><input type="text" name="nombre_evento" id="edit_nombre" class="form-input" required maxlength="150"></div>
+            <div class="form-group"><label>Estado</label><select name="estado_evento" id="edit_estado" class="form-input">
+                <option value="borrador">Borrador</option><option value="publicado">Publicado</option>
+                <option value="en_curso">En curso</option><option value="finalizado">Finalizado</option>
+                <option value="cancelado">Cancelado</option></select></div>
+        </div>
+        <div class="form-grid-2">
+            <div class="form-group"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" id="edit_fecha_inicio" class="form-input" required></div>
+            <div class="form-group"><label>Fecha de fin</label><input type="date" name="fecha_fin" id="edit_fecha_fin" class="form-input" required></div>
+        </div>
+        <div class="form-grid-2">
+            <div class="form-group"><label>Lugar</label><input type="text" name="lugar_entrega" id="edit_lugar_entrega" class="form-input" required maxlength="255"></div>
+        </div>
+        <hr>
+        <div class="form-group"><label>Título de la Publicación</label><input type="text" name="titulo_pub" id="edit_titulo_pub" class="form-input" required maxlength="200"></div>
+        <div class="form-group"><label>Contenido</label><textarea name="contenido_pub" id="edit_contenido_pub" class="form-input" rows="4" required maxlength="500"></textarea></div>
+        <div class="form-group"><label>Imagen de la Publicación</label>
+            <div id="edit_img_preview_wrap" class="img-preview-wrap"><p class="img-preview-label"><i class="fa-solid fa-image"></i> Imagen actual:</p><img id="edit_img_preview" src="" alt="Imagen actual" class="img-current-preview"></div>
+            <input type="file" name="imagen_pub" id="edit_imagen_pub" class="form-input" accept="image/*" onchange="previewNuevaImagen(this)">
+            <small class="text-muted">Deja vacío para mantener la imagen actual.</small>
+            <img id="edit_nueva_img_preview" src="" alt="Nueva imagen" class="img-new-preview" style="display:none;">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditarEvento')">Cancelar</button>
+            <button type="submit" name="editar_evento_completo" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+    </form>
+</div></div>

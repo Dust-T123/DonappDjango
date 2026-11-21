@@ -1,0 +1,10 @@
+{% autoescape off %}Hola, {{ nombre }}
+
+El estado de tu {{ tipo }} ha sido actualizado: {{ estado|upper }}
+{% if observacion %}
+Observación: {{ observacion }}
+{% endif %}
+Si tienes dudas, comunícate con la Fundación CES Waldorf.
+
+Equipo Donapp
+{% endautoescape %}
