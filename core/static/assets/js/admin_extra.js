@@ -125,7 +125,7 @@ window.abrirModalEditarEvento = function(ev) {
     document.getElementById('formEditarEvento').action = ROUTES.editarEvento(ev.idEvento);
 };
 
-// ══════════ VALIDACIÓN: CATEGORÍAS DUPLICADAS (cliente) ══════════
+// ══════════ VALIDACIÓN: CATEGORÍAS DUPLICADAS (donante) ══════════
 // El backend SIEMPRE debe validar de nuevo (ver trigger tg_validar_categoria_duplicada);
 // esto solo evita un viaje al servidor innecesario y da feedback inmediato.
 function categoriasExistentesList() {
@@ -262,3 +262,34 @@ window.generarReporteSolicitudes = function () {
 // (El bloque que reabría el modal de categoría tras un error de Laravel ya no hace falta:
 //  en Django el motivo del rechazo llega como mensaje.)
 
+
+
+// ══════════ CORRECCIONES DE DATOS: detalle completo en modal ══════════
+// Los textos largos (valor actual, valor propuesto, justificación) se leen aquí y no
+// ensanchan la tabla. Se usa textContent: nunca se inyecta HTML del usuario.
+window.abrirDetalleCorreccion = function (btn) {
+    var d = btn.dataset;
+    var poner = function (id, valor) { document.getElementById(id).textContent = valor || '—'; };
+    poner('cd_usuario', d.usuario);
+    poner('cd_solicitante', d.solicitante);
+    poner('cd_campo', d.campo);
+    poner('cd_fecha', d.fecha);
+    poner('cd_anterior', d.anterior);
+    poner('cd_nuevo', d.nuevo);
+    poner('cd_justificacion', d.justificacion);
+
+    var puedeDecidir = !!d.aprobar;      // quien pidió la corrección no recibe las URLs de decisión
+    var soporte = document.getElementById('cd_soporte');
+    var wrap = document.getElementById('cd_soporte_wrap');
+    if (puedeDecidir && d.soporte) { soporte.href = d.soporte; wrap.style.display = ''; }
+    else { soporte.removeAttribute('href'); wrap.style.display = 'none'; }
+
+    document.getElementById('cd_decision').style.display = puedeDecidir ? '' : 'none';
+    document.getElementById('cd_solo_cerrar').style.display = puedeDecidir ? 'none' : '';
+    if (puedeDecidir) {
+        document.getElementById('cd_form_aprobar').action = d.aprobar;
+        document.getElementById('cd_form_rechazar').action = d.rechazar;
+        document.getElementById('cd_form_rechazar').reset();
+    }
+    document.getElementById('modalCorreccionDetalle').style.display = 'flex';
+};

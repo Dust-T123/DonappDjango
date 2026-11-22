@@ -73,7 +73,7 @@ def procesar_correccion(request, usuario, volver, mensaje_ok):
 
     `volver` es la respuesta (redirección) con la que termina la acción en todos los casos.
     """
-    form = CorreccionForm(request.POST, request.FILES)
+    form = CorreccionForm(request.POST, request.FILES, usuario=usuario)
     if not form.is_valid():
         messages.error(request, primer_error(form))
         return volver

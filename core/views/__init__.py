@@ -23,11 +23,11 @@ from .usuario import (  # noqa: F401
     visita_nota,
 )
 from .asistente import (  # noqa: F401
-    cliente_crear,
-    cliente_editar,
-    cliente_historial,
-    cliente_solicitar_correccion,
-    cliente_toggle_estado,
+    donante_crear,
+    donante_editar,
+    donante_historial,
+    donante_solicitar_correccion,
+    donante_toggle_estado,
     dashboard_asistente,
 )
 from .gestion import (  # noqa: F401

@@ -35,10 +35,10 @@ class ModelosTests(TestCase):
 
 
 class LoginTests(TestCase):
-    def test_login_correcto_redirige_a_pantalla_de_exito(self):
+    def test_login_correcto_redirige_al_panel_del_rol(self):
         crear_usuario()
         r = self.client.post(reverse('login'), {'email': 'ANA@correo.com', 'contrasena': 'Clave-Segura-9'})
-        self.assertRedirects(r, reverse('login_exitoso'))
+        self.assertRedirects(r, reverse('dashboard_usuario'))
 
     def test_contrasena_incorrecta(self):
         crear_usuario()
@@ -83,7 +83,7 @@ class RolesTests(TestCase):
 
 class RegistroTests(TestCase):
     datos = {
-        'nombre': 'Luis', 'apellido': 'Pérez', 'tipoDocumento': 'CC', 'numDocumento': 'ABC1234',
+        'nombre': 'Luis', 'apellido': 'Pérez', 'tipoDocumento': 'CC', 'numDocumento': '1234567',
         'fechaNacimiento': '1990-05-10', 'direccion': 'Calle 5 # 6-7', 'email': 'luis@correo.com',
         'telefono': '3001112233', 'password': 'Clave-Segura-9', 'password_confirmation': 'Clave-Segura-9',
         'necesidad': '', 'aceptaTerminos': 'on',

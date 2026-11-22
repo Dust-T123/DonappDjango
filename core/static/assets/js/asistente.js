@@ -43,7 +43,7 @@ function initTabs() {
             urlParams.get('sol_search') || urlParams.get('sol_estado') || urlParams.get('sol_cat') ||
             urlParams.get('don_sort')   || urlParams.get('sol_sort'))   tabId = 'donapp';
         if (urlParams.get('ev_search')  || urlParams.get('ev_estado')  || urlParams.get('ev_sort'))  tabId = 'eventos';
-        if (urlParams.get('cli_search') || urlParams.get('cli_sort')   || urlParams.get('cli_prioridad')) tabId = 'clientes';
+        if (urlParams.get('cli_search') || urlParams.get('cli_sort')   || urlParams.get('cli_prioridad')) tabId = 'donantes';
         if (urlParams.get('cat_search') || urlParams.get('cat_sort'))   tabId = 'categorias';
     }
 
@@ -97,7 +97,7 @@ document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) cerrarModal(m.id); });
 });
 
-// ── VER CLIENTE ───────────────────────────────────────────────────────────
+// ── VER DONANTE ───────────────────────────────────────────────────────────
 function abrirModalVerDonante(cli) {
     const estadoClass = cli.estado === 'activo' ? 'estado-activo' : `estado-${cli.estado}`;
     const estadoLabel = cli.estado ? cli.estado.charAt(0).toUpperCase() + cli.estado.slice(1) : '—';
@@ -128,8 +128,8 @@ function abrirModalVerDonante(cli) {
     abrirModal('modalVerDonante');
 }
 
-// ── FILTRAR SOLICITUDES POR CLIENTE ──────────────────────────────────────
-function filtrarSolicitudesPorCliente(nombre) {
+// ── FILTRAR SOLICITUDES POR DONANTE ──────────────────────────────────────
+function filtrarSolicitudesPorDonante(nombre) {
     activarTab('#donapp');
     setTimeout(() => {
         const solBtn = document.querySelector('.tab-btn[onclick*="sol-panel"]');
@@ -193,7 +193,7 @@ function abrirModalSolicitud(s) {
     abrirModal('modalSolicitud');
 }
 
-// ── EDITAR CLIENTE ────────────────────────────────────────────────────────
+// ── EDITAR DONANTE ────────────────────────────────────────────────────────
 function abrirModalEditarDonante(cli) {
     document.getElementById('edit_cli_id').value        = cli.idUsuario;
     document.getElementById('edit_cli_nombre').value    = cli.nombre;
@@ -343,12 +343,6 @@ if (flashNotif) setTimeout(() => flashNotif.style.opacity = '0', 4000);
 const donacionesData  = JSON.parse(document.getElementById('donacionesData').textContent);
 const solicitudesData = JSON.parse(document.getElementById('solicitudesData').textContent);
 
-function formatearFecha(fechaStr) {
-    if (!fechaStr) return '—';
-    const partes = String(fechaStr).substring(0, 10).split('-');
-    if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    return fechaStr;
-}
 function filtrarPorCriterios(data, estadoId, desdeId, hastaId) {
     const estado = document.getElementById(estadoId).value;
     const desde  = document.getElementById(desdeId).value;
@@ -432,11 +426,11 @@ function generarReporteSolicitudes() {
 function validarCategoriaAsistente(input) {
     const errorId  = (input.id === 'asis_cat_nombre') ? 'asis_cat_err' : 'edit_cat_err';
     const errorMsg = document.getElementById(errorId);
-    const valorLimpio = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    const valorLimpio = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-(),:.]/g, '');
     if (input.value !== valorLimpio) {
         input.value = valorLimpio;
         if (errorMsg) {
-            errorMsg.innerText    = 'Solo se permiten letras y espacios.';
+            errorMsg.innerText    = 'Solo se permiten letras, espacios y - ( ) , : .';
             errorMsg.style.display = 'block';
             setTimeout(() => { errorMsg.style.display = 'none'; }, 2000);
         }

@@ -41,15 +41,15 @@
                 <option value="CE">Cédula de Extranjería</option>
                 <option value="TE">Tarjeta de Extranjería</option>
                 <option value="PPT">Permiso por Protección Temporal</option>
+                <option value="Pasaporte">Pasaporte</option>
             </select>
         </div>
 
         <div class="input-group">
             <label for="numero_doc"><i class="fa-solid fa-hashtag"></i> Número de Documento</label>
             <input type="text" name="numDocumento" id="numero_doc"
-                   placeholder="Digita tu número de documento"
-                   required minlength="4" maxlength="15" pattern="[A-Za-z0-9]{4,15}"
-                   onkeypress="return soloAlfanumerico(event)">
+                   placeholder="Solo números (4 a 15). El pasaporte admite letras"
+                   required minlength="4" maxlength="15" inputmode="numeric">
         </div>
 
         <div class="input-group">
@@ -172,4 +172,5 @@
 
 {% block scripts %}
     <script src="{% static 'assets/js/registro.js' %}"></script>
+    <script src="{% static 'assets/js/validaciones.js' %}"></script>
 {% endblock %}

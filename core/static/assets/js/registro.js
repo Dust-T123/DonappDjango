@@ -10,12 +10,6 @@ function soloNumeros(e) {
     return (key >= 48 && key <= 57);
 }
 
-function soloAlfanumerico(e) {
-    let key   = e.keyCode || e.which;
-    let tecla = String.fromCharCode(key);
-    return /^[a-zA-Z0-9]$/.test(tecla);
-}
-
 function togglePass(inputId, iconId) {
     const input = document.getElementById(inputId);
     const icon  = document.getElementById(iconId);

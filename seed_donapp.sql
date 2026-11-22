@@ -3,6 +3,7 @@
 --   psql -U postgres -d Donapp -f seed_donapp.sql
 -- Es repetible: vacia las tablas core_* y las vuelve a llenar.
 
+SET client_encoding = 'UTF8';
 BEGIN;
 
 TRUNCATE core_correcciondatos, core_visitaobservacion, core_visitadomiciliaria,

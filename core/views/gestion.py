@@ -33,6 +33,8 @@ from ..utils import PANEL_POR_ROL
 from .comun import a_panel, primer_error, procesar_correccion, url_imagen
 
 ESTADOS_FINALES_VISITA = ('rechazada', 'realizada', 'cancelada')
+# Una donación o solicitud cancelada queda en el historial como constancia: no se reabre.
+ESTADO_CANCELADO = 'cancelada'
 ORDEN_PRIORIDAD = {'urgente': 0, 'alta': 1, 'media': 2, 'baja': 3}
 CODIGO_VIGENCIA_SEG = 10 * 60
 CODIGO_MAX_INTENTOS = 5
@@ -293,6 +295,10 @@ def donacion_estado(request, pk):
     if not form.is_valid():
         messages.error(request, primer_error(form))
         return _panel(request, 'donapp')
+    if donacion.estado == ESTADO_CANCELADO:
+        messages.error(request, 'Esta donación está cancelada y queda como constancia en el historial; '
+                                'no se puede modificar su estado.')
+        return _panel(request, 'donapp')
     donacion.estado = form.cleaned_data['estado']
     donacion.observacion = form.cleaned_data['observacion'] or None
     donacion.save(update_fields=['estado', 'observacion'])
@@ -311,6 +317,10 @@ def solicitud_estado(request, pk):
     form = EstadoGestionForm(request.POST)
     if not form.is_valid():
         messages.error(request, primer_error(form))
+        return _panel(request, 'donapp')
+    if solicitud.estado == ESTADO_CANCELADO:
+        messages.error(request, 'Esta solicitud está cancelada y queda como constancia en el historial; '
+                                'no se puede modificar su estado.')
         return _panel(request, 'donapp')
     solicitud.estado = form.cleaned_data['estado']
     solicitud.observacion = form.cleaned_data['observacion'] or None

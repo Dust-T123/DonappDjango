@@ -171,7 +171,7 @@ class PanelAdministradorTests(TestCase):
             'campo': 'nombre', 'valorNuevo': 'Otro', 'justificacion': 'Error de digitación',
             'consentimiento': 'on', 'soporte': archivo()})
         self.client.force_login(self.asis)                       # un asistente
-        self.client.post(reverse('asis_cliente_correccion', args=[self.ana.id]), {
+        self.client.post(reverse('asis_donante_correccion', args=[self.ana.id]), {
             'campo': 'nombre', 'valorNuevo': 'Otro', 'justificacion': 'Error de digitación',
             'consentimiento': 'on', 'soporte': archivo()})
         self.assertEqual(CorreccionDatos.objects.count(), 1)
@@ -213,7 +213,11 @@ class PanelAdministradorTests(TestCase):
                  ('fechaNacimiento', (HOY - timedelta(days=365 * 5)).isoformat()), ('nombre', 'Al'), ('apellido', 'P')]
         # (el número "adm2" coincide con el de admin2: ya está en uso)
         for campo, valor in casos:
-            c = self._correccion(campo, valor)
+            # Se crea directo en la BD: el formulario ya rechaza estos valores al pedirlos
+            # (ver tests_parche), y aquí se prueba la segunda barrera, al aprobar.
+            c = CorreccionDatos.objects.create(
+                usuario=self.ana, solicitante=self.admin, campo=campo, valor_anterior='x', valor_nuevo=valor,
+                justificacion='Error de digitación', estado='pendiente', consentimiento=True)
             self.client.force_login(self.admin2)
             self.post('adm_correccion_aprobar', c.id)
             c.refresh_from_db()
@@ -223,14 +227,15 @@ class PanelAdministradorTests(TestCase):
         self.assertEqual((self.ana.num_documento, self.ana.nombre), ('ana', 'Ana María'))
 
     def test_aprobar_cambia_cada_campo_con_su_tipo(self):
-        for campo, valor in (('apellido', 'Gómez'), ('tipoDocumento', 'CE'), ('numDocumento', 'AB12345'),
+        # El número va antes que el tipo: CE exige un número solo con dígitos.
+        for campo, valor in (('apellido', 'Gómez'), ('numDocumento', '55667788'), ('tipoDocumento', 'CE'),
                              ('fechaNacimiento', '1992-03-04')):
             c = self._correccion(campo, valor)
             self.client.force_login(self.admin2)
             self.post('adm_correccion_aprobar', c.id)
         self.ana.refresh_from_db()
         self.assertEqual((self.ana.apellido, self.ana.tipo_documento, self.ana.num_documento, self.ana.fecha_nacimiento),
-                         ('Gómez', 'CE', 'AB12345', date(1992, 3, 4)))
+                         ('Gómez', 'CE', '55667788', date(1992, 3, 4)))
         c = self._correccion('fechaNacimiento', '05/06/1990')     # también acepta DD/MM/AAAA
         self.client.force_login(self.admin2); self.post('adm_correccion_aprobar', c.id)
         self.ana.refresh_from_db(); self.assertEqual(self.ana.fecha_nacimiento, date(1990, 6, 5))

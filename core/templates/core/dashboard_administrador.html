@@ -107,38 +107,32 @@
                 <p class="text-muted" style="margin-top:-6px;">Solicitudes de cambio sobre campos de identidad. Quien solicita un cambio no puede aprobarlo, aunque sea de otro usuario.</p>
                 <div class="table-wrap"><table>
                     <thead><tr>
-                        <th>Datos de</th><th>Solicitado por</th><th>Campo</th><th>Valor actual</th><th>Valor propuesto</th>
-                        <th>Justificación</th><th>Soporte</th><th>Fecha solicitud</th><th>Acciones</th>
+                        <th>Datos de</th><th>Solicitado por</th><th>Campo</th><th>Valor propuesto</th>
+                        <th>Fecha solicitud</th><th>Acciones</th>
                     </tr></thead>
                     <tbody>
                         {% for c in correcciones %}
                         <tr>
-                            <td>{{ c.usuario.nombre|default:"—" }}</td>
-                            <td>{% if c.solicitante_id == c.usuario_id %}<span class="text-muted">El mismo usuario</span>{% else %}{{ c.solicitante.nombre|default:"—" }}{% endif %}</td>
-                            <td>{{ c.campo }}</td>
-                            <td>{{ c.valor_anterior }}</td>
-                            <td><strong>{{ c.valor_nuevo }}</strong></td>
-                            <td class="td-obs">{{ c.justificacion }}</td>
-                            <td>
-                                {% if c.solicitante_id == yo.id %}
-                                    <span class="text-muted" title="No puedes ver el soporte de tu propia solicitud"><i class="fa-solid fa-lock"></i></span>
-                                {% elif c.soporte_ruta %}
-                                    <a href="{% url 'adm_correccion_soporte' c.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary" title="Ver documento de identidad adjunto"><i class="fa-solid fa-file-shield"></i> Ver</a>
-                                {% else %}<span class="text-muted">—</span>{% endif %}
-                            </td>
+                            <td class="td-trunc">{{ c.usuario.nombre|default:"—" }}</td>
+                            <td class="td-trunc">{% if c.solicitante_id == c.usuario_id %}<span class="text-muted">El mismo usuario</span>{% else %}{{ c.solicitante.nombre|default:"—" }}{% endif %}</td>
+                            <td>{{ c.get_campo_display }}</td>
+                            <td class="td-trunc"><strong>{{ c.valor_nuevo }}</strong></td>
                             <td>{{ c.fecha_solicitud|date:"d/m/Y"|default:"—" }}</td>
                             <td class="td-actions">
+                                {# El detalle completo (valor actual, justificación, soporte y decisión) se abre en un modal. #}
+                                <button type="button" class="btn btn-sm btn-primary" title="Ver detalle completo" onclick="abrirDetalleCorreccion(this)"
+                                        data-usuario="{{ c.usuario.nombre|default:'—' }}"
+                                        data-solicitante="{% if c.solicitante_id == c.usuario_id %}El mismo usuario{% else %}{{ c.solicitante.nombre|default:'—' }}{% endif %}"
+                                        data-campo="{{ c.get_campo_display }}"
+                                        data-anterior="{{ c.valor_anterior }}"
+                                        data-nuevo="{{ c.valor_nuevo }}"
+                                        data-justificacion="{{ c.justificacion }}"
+                                        data-fecha="{{ c.fecha_solicitud|date:'d/m/Y'|default:'—' }}"
+                                        {% if c.solicitante_id != yo.id %}data-aprobar="{% url 'adm_correccion_aprobar' c.id %}" data-rechazar="{% url 'adm_correccion_rechazar' c.id %}"{% if c.soporte_ruta %} data-soporte="{% url 'adm_correccion_soporte' c.id %}"{% endif %}{% endif %}>
+                                    <i class="fa-solid fa-eye"></i> Ver detalle
+                                </button>
                                 {% if c.solicitante_id == yo.id %}
                                     <span class="text-muted" title="No puedes aprobar una solicitud que tú mismo pediste"><i class="fa-solid fa-ban"></i> La pediste tú</span>
-                                {% else %}
-                                    <form action="{% url 'adm_correccion_aprobar' c.id %}" method="POST" style="display:inline" onsubmit="return confirm('¿Aprobar y aplicar este cambio al usuario?')">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success" title="Aprobar"><i class="fa-solid fa-check"></i></button>
-                                    </form>
-                                    <form action="{% url 'adm_correccion_rechazar' c.id %}" method="POST" style="display:inline" onsubmit="return confirm('¿Rechazar esta solicitud?')">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Rechazar"><i class="fa-solid fa-xmark"></i></button>
-                                    </form>
                                 {% endif %}
                             </td>
                         </tr>
@@ -374,12 +368,13 @@
                         <option value="CE">Cédula de Extranjería</option>
                         <option value="TE">Tarjeta de Extranjería</option>
                         <option value="PPT">Permiso por Protección Temporal</option>
+                        <option value="Pasaporte">Pasaporte</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Número de documento *</label>
-                    <input type="text" name="numDocumento" class="form-input" required maxlength="15" pattern="[A-Za-z0-9]{4,15}"
-                           placeholder="Ingrese el número de identificación">
+                    <input type="text" name="numDocumento" class="form-input" required maxlength="15" minlength="4" inputmode="numeric"
+                           placeholder="Solo números (4 a 15). El pasaporte admite letras">
                 </div>
                 <div class="form-group">
                     <label>Fecha de nacimiento *</label>
@@ -592,7 +587,7 @@
             {% csrf_token %}
             <div class="form-group">
                 <label>Nombre de la categoría *</label>
-                <input type="text" name="nombre_categoria" id="cat_nombre" class="form-input" autocomplete="off" pattern="[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s\(\)\-]+"
+                <input type="text" name="nombre_categoria" id="cat_nombre" class="form-input" autocomplete="off" pattern="[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s\(\)\-,:.]+"
                        required minlength="3" maxlength="100"
                        placeholder="Ingrese la nueva categoría"
                        onkeypress="return soloLetras(event)"
@@ -621,7 +616,7 @@
             <input type="hidden" name="idCategoria" id="ecat_id">
             <div class="form-group">
                 <label>Nombre de la categoría *</label>
-                <input type="text" name="nombre_categoria" id="ecat_nombre" class="form-input" autocomplete="off" pattern="[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s\(\)\-]+"
+                <input type="text" name="nombre_categoria" id="ecat_nombre" class="form-input" autocomplete="off" pattern="[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s\(\)\-,:.]+"
                        required minlength="3" maxlength="100" onkeypress="return soloLetras(event)" oninput="validarEntrada(this)">
                 <small id="ecat_err" class="field-error" style="display:none;"></small>
             </div>
@@ -739,6 +734,44 @@
 
 {% include 'core/partials/modales_gestion.html' %}
 
+{# ── Detalle de una solicitud de corrección: todo en modal para que los textos largos no deformen la tabla ── #}
+<div id="modalCorreccionDetalle" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-user-shield"></i> Solicitud de corrección de datos</h3>
+            <button type="button" class="modal-close" onclick="cerrarModal('modalCorreccionDetalle')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="detalle-box detalle-largo">
+            <p><strong>Datos de:</strong> <span id="cd_usuario"></span></p>
+            <p><strong>Solicitado por:</strong> <span id="cd_solicitante"></span></p>
+            <p><strong>Campo:</strong> <span id="cd_campo"></span></p>
+            <p><strong>Fecha de solicitud:</strong> <span id="cd_fecha"></span></p>
+            <p><strong>Valor actual:</strong></p>
+            <div class="texto-largo" id="cd_anterior"></div>
+            <p><strong>Valor propuesto:</strong></p>
+            <div class="texto-largo texto-destacado" id="cd_nuevo"></div>
+            <p><strong>Justificación:</strong></p>
+            <div class="texto-largo" id="cd_justificacion"></div>
+            <p id="cd_soporte_wrap" style="display:none"><a id="cd_soporte" href="#" target="_blank" rel="noopener" class="btn btn-sm btn-secondary"><i class="fa-solid fa-file-shield"></i> Ver documento de identidad adjunto</a></p>
+        </div>
+        <div id="cd_decision" style="display:none">
+            <form id="cd_form_rechazar" method="POST" class="form-rechazo">
+                {% csrf_token %}
+                <div class="form-group"><label>Motivo del rechazo <span class="text-muted">(opcional)</span></label>
+                    <textarea name="motivo" class="form-input" rows="2" maxlength="300" placeholder="Explica brevemente por qué se rechaza..."></textarea></div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Rechazar esta solicitud?')"><i class="fa-solid fa-xmark"></i> Rechazar</button>
+                    <button type="submit" class="btn btn-success" form="cd_form_aprobar" onclick="return confirm('¿Aprobar y aplicar este cambio al usuario?')"><i class="fa-solid fa-check"></i> Aprobar y aplicar</button>
+                </div>
+            </form>
+            <form id="cd_form_aprobar" method="POST" style="display:none">{% csrf_token %}</form>
+        </div>
+        <div class="modal-footer" id="cd_solo_cerrar" style="display:none">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalCorreccionDetalle')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -761,4 +794,5 @@
 <script src="{% static 'assets/js/admin.js' %}"></script>
 <script src="{% static 'assets/js/admin_dashboard.js' %}"></script>
 <script src="{% static 'assets/js/admin_extra.js' %}"></script>
+<script src="{% static 'assets/js/validaciones.js' %}"></script>
 {% endblock %}
