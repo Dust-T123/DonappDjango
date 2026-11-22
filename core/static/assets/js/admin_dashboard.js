@@ -82,12 +82,7 @@ function cerrarModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
-// Cerrar modal al hacer clic fuera del contenido
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal')) {
-        e.target.style.display = 'none';
-    }
-});
+// (el cierre al hacer clic fuera del modal está en admin.js)
 
 // ─────────────────────────────────────────────
 // MODAL — CREAR USUARIO
@@ -145,93 +140,6 @@ function abrirModalEditarUsuario(u) {
  * Bloquea controles y oculta el botón si la visita no está en estado editable.
  * @param {Object} data - Datos de la visita e historial.
  */
-function abrirModalVisita(data) {
-    const modal = document.getElementById('modalVisita');
-    if (!modal) return;
-
-    // Helper interno por si escHtml no está definido en el ámbito global
-    const safeHtml = (str) => {
-        if (typeof escHtml === 'function') return escHtml(str);
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    };
-
-    // 1. Validar si la visita es editable
-    const estadosEditables = ['pendiente'];
-    const estadoActual = String(data?.estado || '').toLowerCase();
-    const esEditable = estadosEditables.includes(estadoActual);
-
-    // 2. Configurar el formulario y la ruta
-    const formVisita = document.getElementById('formVisita');
-    if (formVisita && data?.idVisita) {
-        formVisita.action = window.ROUTES_ADM.visita(data.idVisita);
-    }
-
-    // 3. Asignar estado actual al select
-    const elEstado = document.getElementById('vis_estado');
-    if (elEstado) {
-        elEstado.value = data?.estado || '';
-    }
-
-    // 4. Bloquear / Desbloquear inputs, selectores y textareas
-    const controles = modal.querySelectorAll('input, textarea, select');
-    controles.forEach(control => {
-        if (control.type === 'hidden') return;
-
-        // Deshabilitar cualquier control si no es editable
-        control.disabled = !esEditable;
-
-        // Limpiar o restablecer campos de texto adicionales (ej. nueva observación)
-        if (control.tagName === 'TEXTAREA' || (control.tagName === 'INPUT' && control.type === 'text')) {
-            if (control.id !== 'vis_estado') {
-                control.readOnly = !esEditable;
-            }
-        }
-    });
-
-    // Resetear el campo de nuevas observaciones al abrir
-    const campoObs = document.getElementById('vis_obs');
-    if (campoObs) {
-        campoObs.value = '';
-    }
-
-    // 5. Visibilidad del botón de guardar
-    const btnGuardar = modal.querySelector('button[type="submit"]');
-    if (btnGuardar) {
-        btnGuardar.style.display = esEditable ? 'inline-block' : 'none';
-    }
-
-    // 6. Renderizar historial / bitácora
-    const contenedorHistorial = document.getElementById('vis_historial');
-    if (contenedorHistorial) {
-        if (Array.isArray(data?.historial) && data.historial.length > 0) {
-            contenedorHistorial.innerHTML = data.historial.map(item => `
-                <div class="historial-item" style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #0d6efd;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong>${safeHtml(item.autor || 'Sistema')}</strong>
-                        <small class="text-muted">${safeHtml(item.fecha || '')}</small>
-                    </div>
-                    <p style="margin: 4px 0 0 0; color: #333;">${safeHtml(item.texto || '')}</p>
-                </div>
-            `).join('');
-        } else {
-            contenedorHistorial.innerHTML = '<p class="text-muted" style="margin: 0; font-size: 0.9rem;">Sin notas registradas en la bitácora.</p>';
-        }
-    }
-
-    // 7. Mostrar la modal
-    if (typeof abrirModal === 'function') {
-        abrirModal('modalVisita');
-    } else {
-        modal.classList.add('show');
-        modal.style.display = 'block';
-    }
-}
 
 // ─────────────────────────────────────────────
 // MODAL — GESTIONAR DONACIÓN
@@ -439,18 +347,18 @@ function actualizarHintObservacion(estadoId, hintId, obsId, errId) {
  * @param {HTMLInputElement} input
  */
 function validarEntrada(input) {
-    const patron = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-()]*$/;
+    const patron = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-(),:.]*$/;
     const errId = input.id === 'cat_nombre' ? 'cat_err' : 'ecat_err';
     const errEl = document.getElementById(errId);
 
     // Las categorías nunca llevan números: se limpia en vivo, igual que en el panel de asistente.
-    const valorLimpio = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-()]/g, '');
+    const valorLimpio = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-(),:.]/g, '');
     if (input.value !== valorLimpio) {
         input.value = valorLimpio;
     }
 
     if (!patron.test(input.value) && input.value !== '') {
-        errEl.textContent = 'Solo se permiten letras, espacios, guiones y paréntesis (nunca números).';
+        errEl.textContent = 'Solo se permiten letras, espacios, guiones, paréntesis, comas, puntos y dos puntos (nunca números).';
         errEl.style.display = 'inline';
         input.style.borderColor = '#c62828';
     } else {
@@ -468,7 +376,7 @@ function validarCategoria(modo) {
     const errId = modo === 'crear' ? 'cat_err' : 'ecat_err';
     const input = document.getElementById(inputId);
     const errEl = document.getElementById(errId);
-    const patron = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-_.,()]+$/;
+    const patron = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-.,:()]+$/;
 
     if (!patron.test(input.value.trim())) {
         errEl.textContent = 'Caracteres no permitidos en el nombre.';

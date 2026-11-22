@@ -2,12 +2,12 @@
 
 Lo que comparte con el administrador (donaciones, solicitudes, stock, eventos, visitas,
 categorías y perfil) vive en `gestion.py`. Aquí queda lo exclusivo del asistente: la
-gestión de "clientes" (donantes/solicitantes).
+gestión de donantes/solicitantes.
 
 Diferencias de seguridad respecto al original:
   * Laravel permitía que un asistente editara, desactivara o pidiera correcciones sobre
     CUALQUIER usuario por id (incluidos administradores). Aquí todas las acciones sobre
-    "clientes" quedan limitadas a usuarios con rol donante.
+    usuarios quedan limitadas a usuarios con rol donante.
   * Las acciones que cambian datos son solo POST.
 """
 
@@ -21,8 +21,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from ..decorators import rol_requerido
-from ..forms import ClienteCrearForm, ClienteEditarForm
+from ..forms import DonanteCrearForm, DonanteEditarForm
 from ..models import Categoria, CorreccionDatos, Donacion, DonacionUsuario, Solicitud, Usuario
+from ..utils import fecha_hace_anios
 from .comun import a_panel, primer_error, procesar_correccion
 from .gestion import ORDEN_PRIORIDAD, _iso, _rank_prioridad, datos_gestion
 
@@ -37,7 +38,7 @@ RUTAS = {
 }
 
 
-def _cliente_o_404(pk):
+def _donante_o_404(pk):
     """El asistente solo gestiona donantes/solicitantes, nunca a otro personal."""
     return get_object_or_404(Usuario, pk=pk, rol='donante')
 
@@ -50,17 +51,17 @@ def dashboard_asistente(request):
     yo = request.user
 
     # Donantes / solicitantes
-    clientes = Usuario.objects.filter(rol='donante')
+    donantes = Usuario.objects.filter(rol='donante')
     if g.get('cli_search'):
         s = g['cli_search']
-        clientes = clientes.filter(Q(nombre__icontains=s) | Q(apellido__icontains=s) | Q(email__icontains=s))
+        donantes = donantes.filter(Q(nombre__icontains=s) | Q(apellido__icontains=s) | Q(email__icontains=s))
     if g.get('cli_prioridad') in ORDEN_PRIORIDAD:
-        clientes = clientes.filter(prioridad=g['cli_prioridad'])
-    clientes = clientes.order_by(
+        donantes = donantes.filter(prioridad=g['cli_prioridad'])
+    donantes = donantes.order_by(
         {'az': 'nombre', 'za': '-nombre'}.get(g.get('cli_sort'), '-id')
-    ) if g.get('cli_sort') != 'prioridad' else clientes.annotate(_r=_rank_prioridad('prioridad')).order_by('_r', '-id')
-    clientes = list(clientes)
-    for c in clientes:
+    ) if g.get('cli_sort') != 'prioridad' else donantes.annotate(_r=_rank_prioridad('prioridad')).order_by('_r', '-id')
+    donantes = list(donantes)
+    for c in donantes:
         c.json = json.dumps({
             'idUsuario': c.id, 'nombre': c.nombre, 'apellido': c.apellido, 'tipoDocumento': c.tipo_documento,
             'numDocumento': c.num_documento, 'fechaNacimiento': _iso(c.fecha_nacimiento), 'email': c.email,
@@ -80,25 +81,25 @@ def dashboard_asistente(request):
 
     contexto = datos_gestion(request)
     contexto |= {
-        'yo': yo, 'clientes': clientes, 'categorias': categorias_filtradas, 'todas_categorias': todas_categorias,
-        'total_clientes': Usuario.objects.filter(rol='donante').count(),
+        'yo': yo, 'donantes': donantes, 'categorias': categorias_filtradas, 'todas_categorias': todas_categorias,
+        'total_donantes': Usuario.objects.filter(rol='donante').count(),
         'mis_correcciones': CorreccionDatos.objects.filter(solicitante=yo).select_related('usuario').order_by('-id'),
         'categorias_existentes': [{'id': c.id, 'nombre': c.nombre.strip().lower()} for c in todas_categorias],
-        'edad_minima_nacimiento': timezone.localdate().replace(year=timezone.localdate().year - 14),
+        'edad_minima_nacimiento': fecha_hace_anios(14, timezone.localdate()),
         'ruta': RUTAS,
     }
     return render(request, 'core/dashboard_asistente.html', contexto)
 
 
-# ── CLIENTES (donantes / solicitantes) ───────────────────────────────────────
+# ── DONANTES / SOLICITANTES ───────────────────────────────────────
 
 @rol_requerido('asistente')
 @require_POST
-def cliente_crear(request):
-    form = ClienteCrearForm(request.POST)
+def donante_crear(request):
+    form = DonanteCrearForm(request.POST)
     if not form.is_valid():
         messages.error(request, primer_error(form))
-        return a_panel(PANEL, 'clientes')
+        return a_panel(PANEL, 'donantes')
     c = form.cleaned_data
     Usuario.objects.create_user(
         email=c['email'], password=c['password'], rol='donante', estado='activo',
@@ -106,48 +107,48 @@ def cliente_crear(request):
         num_documento=c['numDocumento'], fecha_nacimiento=c['fechaNacimiento'], direccion=c['direccion'],
         telefono=c['telefono'], necesidad=c['necesidad'] or None, prioridad=c['prioridad'] or None,
         observacion_visita=c['observacion_visita'] or None)
-    messages.success(request, 'Cliente creado correctamente.')
-    return a_panel(PANEL, 'clientes')
+    messages.success(request, 'Donante/solicitante creado correctamente.')
+    return a_panel(PANEL, 'donantes')
 
 
 @rol_requerido('asistente')
 @require_POST
-def cliente_editar(request, pk):
-    cliente = _cliente_o_404(pk)
-    form = ClienteEditarForm(request.POST, usuario=cliente)
+def donante_editar(request, pk):
+    donante = _donante_o_404(pk)
+    form = DonanteEditarForm(request.POST, usuario=donante)
     if not form.is_valid():
         messages.error(request, primer_error(form))
-        return a_panel(PANEL, 'clientes')
+        return a_panel(PANEL, 'donantes')
     c = form.cleaned_data
-    cliente.email, cliente.telefono, cliente.direccion = c['email'], c['telefono'], c['direccion']
-    cliente.necesidad = c['necesidad'] or None
-    cliente.prioridad = c['prioridad'] or None
-    cliente.observacion_visita = c['observacion_visita'] or None
+    donante.email, donante.telefono, donante.direccion = c['email'], c['telefono'], c['direccion']
+    donante.necesidad = c['necesidad'] or None
+    donante.prioridad = c['prioridad'] or None
+    donante.observacion_visita = c['observacion_visita'] or None
     if c['password']:
-        cliente.set_password(c['password'])
-    cliente.save()
-    messages.success(request, 'Cliente actualizado correctamente.')
-    return a_panel(PANEL, 'clientes')
+        donante.set_password(c['password'])
+    donante.save()
+    messages.success(request, 'Donante/solicitante actualizado correctamente.')
+    return a_panel(PANEL, 'donantes')
 
 
 @rol_requerido('asistente')
 @require_POST
-def cliente_toggle_estado(request, pk):
-    cliente = _cliente_o_404(pk)
-    cliente.estado = 'inactivo' if cliente.estado == 'activo' else 'activo'
-    cliente.save(update_fields=['estado'])
-    messages.success(request, f'Cliente {cliente.estado} correctamente.')
-    return a_panel(PANEL, 'clientes')
+def donante_toggle_estado(request, pk):
+    donante = _donante_o_404(pk)
+    donante.estado = 'inactivo' if donante.estado == 'activo' else 'activo'
+    donante.save(update_fields=['estado'])
+    messages.success(request, f'Donante/solicitante {donante.estado} correctamente.')
+    return a_panel(PANEL, 'donantes')
 
 
 @rol_requerido('asistente')
 @require_GET
-def cliente_historial(request, pk):
-    """JSON con las donaciones y solicitudes de un cliente (lo consume el modal de historial)."""
-    cliente = _cliente_o_404(pk)
+def donante_historial(request, pk):
+    """JSON con las donaciones y solicitudes de un donante/solicitante (lo consume el modal de historial)."""
+    donante = _donante_o_404(pk)
     donaciones = []
-    for d in Donacion.objects.filter(donantes__donante=cliente).select_related('categoria') \
-            .prefetch_related(Prefetch('donantes', queryset=DonacionUsuario.objects.filter(donante=cliente),
+    for d in Donacion.objects.filter(donantes__donante=donante).select_related('categoria') \
+            .prefetch_related(Prefetch('donantes', queryset=DonacionUsuario.objects.filter(donante=donante),
                                        to_attr='mios')).distinct().order_by('-id'):
         donaciones.append({
             'idDonacion': d.id, 'descripcion': d.descripcion, 'categoria': d.categoria.nombre if d.categoria else '—',
@@ -155,13 +156,13 @@ def cliente_historial(request, pk):
     solicitudes = [{
         'idSolicitud': s.id, 'descripcion': s.descripcion, 'categoria': s.categoria.nombre if s.categoria else '—',
         'estado': s.estado, 'fecha': s.fecha_creacion.strftime('%d/%m/%Y')}
-        for s in Solicitud.objects.filter(solicitante=cliente).select_related('categoria').order_by('-id')]
+        for s in Solicitud.objects.filter(solicitante=donante).select_related('categoria').order_by('-id')]
     return JsonResponse({'donaciones': donaciones, 'solicitudes': solicitudes})
 
 
 @rol_requerido('asistente')
 @require_POST
-def cliente_solicitar_correccion(request, pk):
+def donante_solicitar_correccion(request, pk):
     return procesar_correccion(
-        request, _cliente_o_404(pk), a_panel(PANEL, 'clientes'),
+        request, _donante_o_404(pk), a_panel(PANEL, 'donantes'),
         'Solicitud de corrección enviada. Un administrador la revisará.')

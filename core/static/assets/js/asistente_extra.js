@@ -1,7 +1,4 @@
 // Escapa texto del usuario antes de insertarlo con innerHTML (evita XSS almacenado).
-function esc(v) {
-    return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 
 // Lógica del panel del asistente que en Laravel vivía en un <script> dentro del Blade.
 // Las URLs llegan desde el template en window.ROUTES_ASIS (ver dashboard_asistente.html).
@@ -47,7 +44,7 @@ function abrirModalVisita(v) {
     abrirModal('modalVisita');
 }
 
-let _clienteActivo = null;
+let _donanteActivo = null;
 
 // ── Donación ──────────────────────────────────────────────────
 const _origDon = window.abrirModalDonacion;
@@ -82,10 +79,10 @@ window.abrirModalEditarEvento = function(ev) {
     document.getElementById('formEditarEvento').action = ROUTES_ASIS.editarEvento(ev.idEvento);
 };
 
-// ── Editar cliente ────────────────────────────────────────────
+// ── Editar donante ────────────────────────────────────────────
 window.abrirModalEditarDonante = function(cli) {
-    _clienteActivo = cli;
-    document.getElementById('formEditarDonante').action      = ROUTES_ASIS.editarCliente(cli.idUsuario);
+    _donanteActivo = cli;
+    document.getElementById('formEditarDonante').action      = ROUTES_ASIS.editarDonante(cli.idUsuario);
     document.getElementById('edit_cli_nombre').value         = cli.nombre            ?? '';
     document.getElementById('edit_cli_apellido').value       = cli.apellido          ?? '';
     document.getElementById('edit_cli_tipoDoc').value        = cli.tipoDocumento      ?? '';
@@ -100,24 +97,24 @@ window.abrirModalEditarDonante = function(cli) {
     abrirModal('modalEditarDonante');
 };
 
-// ── Solicitar corrección de datos sensibles de un cliente ─────
-window.abrirModalCorreccionCliente = function() {
-    if (!_clienteActivo) return;
-    document.getElementById('cc_nombre_cliente').textContent = _clienteActivo.nombre ?? '';
-    document.getElementById('formCorreccionCliente').action  = ROUTES_ASIS.solicitarCorreccionCliente(_clienteActivo.idUsuario);
-    document.getElementById('formCorreccionCliente').reset();
+// ── Solicitar corrección de datos sensibles de un donante ─────
+window.abrirModalCorreccionDonante = function() {
+    if (!_donanteActivo) return;
+    document.getElementById('cc_nombre_donante').textContent = _donanteActivo.nombre ?? '';
+    document.getElementById('formCorreccionDonante').action  = ROUTES_ASIS.solicitarCorreccionDonante(_donanteActivo.idUsuario);
+    document.getElementById('formCorreccionDonante').reset();
     cerrarModal('modalEditarDonante');
-    abrirModal('modalCorreccionCliente');
+    abrirModal('modalCorreccionDonante');
 };
 
-// ── Historial de donaciones / solicitudes del cliente ─────────
-window.abrirModalHistorialCliente = async function(cli) {
+// ── Historial de donaciones / solicitudes del donante ─────────
+window.abrirModalHistorialDonante = async function(cli) {
     document.getElementById('historial_nombre').textContent = cli.nombre;
     document.getElementById('historial_cuerpo').innerHTML   = '<p class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</p>';
-    abrirModal('modalHistorialCliente');
+    abrirModal('modalHistorialDonante');
 
     try {
-        const res  = await fetch(ROUTES_ASIS.historialCliente(cli.idUsuario));
+        const res  = await fetch(ROUTES_ASIS.historialDonante(cli.idUsuario));
 
         if (!res.ok) throw new Error('Error al obtener el historial.');
 
@@ -127,8 +124,8 @@ window.abrirModalHistorialCliente = async function(cli) {
             ? data.donaciones.map(d => `
                 <tr>
                     <td>${d.idDonacion}</td>
-                    <td>${esc(d.descripcion ?? '—')}</td>
-                    <td>${esc(d.categoria   ?? '—')}</td>
+                    <td class="td-desc">${esc(d.descripcion ?? '—')}</td>
+                    <td class="td-cat">${esc(d.categoria   ?? '—')}</td>
                     <td><span class="badge estado-${esc(d.estado)}">${esc(d.estado)}</span></td>
                     <td>${d.fecha       ?? '—'}</td>
                 </tr>`).join('')
@@ -138,8 +135,8 @@ window.abrirModalHistorialCliente = async function(cli) {
             ? data.solicitudes.map(s => `
                 <tr>
                     <td>${s.idSolicitud}</td>
-                    <td>${esc(s.descripcion ?? '—')}</td>
-                    <td>${esc(s.categoria   ?? '—')}</td>
+                    <td class="td-desc">${esc(s.descripcion ?? '—')}</td>
+                    <td class="td-cat">${esc(s.categoria   ?? '—')}</td>
                     <td><span class="badge estado-${esc(s.estado)}">${esc(s.estado)}</span></td>
                     <td>${s.fecha       ?? '—'}</td>
                 </tr>`).join('')
@@ -221,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (formEditar) formEditar.addEventListener('submit', e => { if (!validarFechaEvento(formEditar)) e.preventDefault(); });
 });
 
-// ══════════ VALIDACIÓN: CATEGORÍAS DUPLICADAS (cliente) ══════════
+// ══════════ VALIDACIÓN: CATEGORÍAS DUPLICADAS (donante) ══════════
 // El backend SIEMPRE valida de nuevo (unique + regex en AsisController); esto
 // solo evita un viaje al servidor innecesario y da feedback inmediato.
 function categoriasExistentesListAsis() {

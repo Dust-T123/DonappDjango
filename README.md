@@ -55,7 +55,6 @@ py manage.py migrate
 ### 6. Cargar los datos iniciales
 
 ```powershell
-$env:PGCLIENTENCODING="UTF8"
 & "C:\Program Files\PostgreSQL\<version>\bin\psql.exe" -U postgres -d Donapp -f seed_donapp.sql
 ```
 

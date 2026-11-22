@@ -169,10 +169,11 @@ def donacion_editar(request, pk):
 @require_POST
 def donacion_cancelar(request, pk):
     donacion = get_object_or_404(Donacion, pk=pk, donantes__donante=request.user, estado='pendiente')
-    with transaction.atomic():
-        DonacionUsuario.objects.filter(donacion=donacion).delete()
-        donacion.delete()
-    messages.success(request, 'Donación cancelada correctamente.')
+    # No se borra: queda en el historial con estado "cancelada" (igual que las visitas domiciliarias).
+    donacion.estado = 'cancelada'
+    donacion.observacion = 'Cancelada por el donante.'
+    donacion.save(update_fields=['estado', 'observacion'])
+    messages.success(request, 'Donación cancelada correctamente. Seguirá visible en tu historial.')
     return a_panel('dashboard_usuario', 'donaciones')
 
 
@@ -211,8 +212,12 @@ def solicitud_editar(request, pk):
 @rol_requerido('donante')
 @require_POST
 def solicitud_cancelar(request, pk):
-    get_object_or_404(Solicitud, pk=pk, solicitante=request.user, estado='pendiente').delete()
-    messages.success(request, 'Solicitud cancelada correctamente.')
+    solicitud = get_object_or_404(Solicitud, pk=pk, solicitante=request.user, estado='pendiente')
+    # No se borra: queda en el historial con estado "cancelada" (igual que las visitas domiciliarias).
+    solicitud.estado = 'cancelada'
+    solicitud.observacion = 'Cancelada por el solicitante.'
+    solicitud.save(update_fields=['estado', 'observacion'])
+    messages.success(request, 'Solicitud cancelada correctamente. Seguirá visible en tu historial.')
     return a_panel('dashboard_usuario', 'solicitudes')
 
 

@@ -36,7 +36,7 @@ class RolInvalidoTests(TestCase):
     def test_el_rol_correcto_sigue_funcionando(self):
         Usuario.objects.filter(pk=self.u.pk).update(rol='donante')
         r = self.client.post(reverse('login'), {'email': 'mal@x.co', 'contrasena': 'Clave123*'})
-        self.assertRedirects(r, reverse('login_exitoso'), fetch_redirect_response=False)
+        self.assertRedirects(r, reverse('dashboard_usuario'), fetch_redirect_response=False)
 
 
 @skipUnless(connection.vendor == 'postgresql', 'El diagnóstico es solo para PostgreSQL')

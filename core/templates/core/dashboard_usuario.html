@@ -490,7 +490,7 @@
                         {% for c in mis_correcciones %}
                         <tr>
                             <td>{{ c.get_campo_display }}</td>
-                            <td><strong>{{ c.valor_nuevo }}</strong></td>
+                            <td class="td-obs"><strong>{{ c.valor_nuevo }}</strong></td>
                             <td><span class="badge estado-{{ c.estado }}">{{ c.estado }}</span></td>
                             <td>{{ c.fecha_solicitud|date:"d/m/Y"|default:"—" }}</td>
                         </tr>
@@ -709,4 +709,5 @@
     window.URL_VISITA_NOTA      = "{% url 'usuario_visita_nota' 0 %}";
 </script>
 <script src="{% static 'assets/js/usuario.js' %}"></script>
+<script src="{% static 'assets/js/validaciones.js' %}"></script>
 {% endblock %}

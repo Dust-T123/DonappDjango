@@ -148,7 +148,7 @@ class LoginConContrasenasDeLaravelTests(TestCase):
     def test_tras_normalizar_entra_y_la_contrasena_se_actualiza_a_pbkdf2(self):
         normalizar_hashes(Usuario)
         r = self.entrar()
-        self.assertRedirects(r, reverse('login_exitoso'), fetch_redirect_response=False)
+        self.assertRedirects(r, reverse('dashboard_usuario'), fetch_redirect_response=False)
         self.ana.refresh_from_db()
         self.assertTrue(self.ana.password.startswith('pbkdf2_sha256$'), 'se re-hashea sola en el primer login')
         self.assertTrue(self.ana.check_password(CLAVE), 'y la contraseña sigue siendo la misma')
@@ -173,7 +173,7 @@ class LoginConContrasenasDeLaravelTests(TestCase):
         """Antes: el re-hash llamaba a save() -> clean() -> ValidationError -> 500 en el login."""
         Usuario.objects.filter(pk=self.ana.pk).update(fecha_nacimiento=date.today() - timedelta(days=365 * 10))
         normalizar_hashes(Usuario)
-        self.assertRedirects(self.entrar(), reverse('login_exitoso'), fetch_redirect_response=False)
+        self.assertRedirects(self.entrar(), reverse('dashboard_usuario'), fetch_redirect_response=False)
 
 
 class SaveParcialTests(TestCase):

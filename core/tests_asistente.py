@@ -66,20 +66,20 @@ class PanelAsistenteTests(TestCase):
         c = r.context
         self.assertEqual((c['total_donaciones'], c['total_solicitudes'], c['total_aprobadas']), (1, 1, 1))
         self.assertEqual(c['total_pendientes'], 1)
-        self.assertEqual(c['total_clientes'], 3)
+        self.assertEqual(c['total_donantes'], 3)
         self.assertEqual(c['total_visitas_pendientes'], 1)
         self.assertEqual(c['total_unidades_inventario'], 4)
         self.assertEqual(c['donaciones'][0].donante_nombre, 'Ana María')
         self.assertEqual(c['visitas'][0].ultima_nota, 'Nota inicial')
 
-    def test_clientes_solo_donantes_y_orden_por_prioridad(self):
+    def test_donantes_solo_donantes_y_orden_por_prioridad(self):
         r = self.client.get(reverse('dashboard_asistente'), {'cli_sort': 'prioridad'})
-        self.assertEqual([x.email for x in r.context['clientes']], ['beto@x.co', 'ana@x.co', 'sin@x.co'])
-        self.assertFalse(any(x.rol != 'donante' for x in r.context['clientes']))
+        self.assertEqual([x.email for x in r.context['donantes']], ['beto@x.co', 'ana@x.co', 'sin@x.co'])
+        self.assertFalse(any(x.rol != 'donante' for x in r.context['donantes']))
         r = self.client.get(reverse('dashboard_asistente'), {'cli_search': 'zoe'})
-        self.assertEqual([x.email for x in r.context['clientes']], ['sin@x.co'])
+        self.assertEqual([x.email for x in r.context['donantes']], ['sin@x.co'])
         r = self.client.get(reverse('dashboard_asistente'), {'cli_prioridad': 'urgente'})
-        self.assertEqual([x.email for x in r.context['clientes']], ['beto@x.co'])
+        self.assertEqual([x.email for x in r.context['donantes']], ['beto@x.co'])
 
     def test_solicitudes_orden_por_prioridad_y_filtros(self):
         for u, desc in ((self.ana, 'S-baja'), (self.beto, 'S-urgente'), (self.sin_prio, 'S-sin')):
@@ -195,8 +195,8 @@ class PanelAsistenteTests(TestCase):
         html = mail.outbox[-1].alternatives[0][0]
         self.assertTrue('&lt;b&gt;hola&lt;/b&gt;' in html)
 
-    # ── clientes ──
-    def _cliente(self, **extra):
+    # ── donantes ──
+    def _donante(self, **extra):
         datos = {'nombre': 'Carlos', 'apellido': 'Ruiz', 'tipoDocumento': 'CC', 'numDocumento': '99887766',
                  'fechaNacimiento': '1985-05-05', 'direccion': 'Calle 5 # 6-7', 'email': 'carlos@x.co',
                  'telefono': '3011112222', 'password': 'Segura987*', 'password_confirmation': 'Segura987*',
@@ -204,79 +204,79 @@ class PanelAsistenteTests(TestCase):
         datos.update(extra)
         return datos
 
-    def test_crear_cliente(self):
-        self.post('asis_cliente_crear', **self._cliente())
+    def test_crear_donante(self):
+        self.post('asis_donante_crear', **self._donante())
         c = Usuario.objects.get(email='carlos@x.co')
         self.assertEqual((c.rol, c.estado, c.prioridad), ('donante', 'activo', 'alta'))
         self.assertTrue(c.check_password('Segura987*'))
 
-    def test_crear_cliente_rechaza_duplicados_menores_y_rol_forzado(self):
-        self.post('asis_cliente_crear', **self._cliente(email='ana@x.co'))
-        self.post('asis_cliente_crear', **self._cliente(numDocumento='ana'))
-        self.post('asis_cliente_crear', **self._cliente(fechaNacimiento=(HOY - timedelta(days=365 * 10)).isoformat()))
-        self.post('asis_cliente_crear', **self._cliente(prioridad='suprema'))
-        self.post('asis_cliente_crear', **self._cliente(password_confirmation='otra'))
+    def test_crear_donante_rechaza_duplicados_menores_y_rol_forzado(self):
+        self.post('asis_donante_crear', **self._donante(email='ana@x.co'))
+        self.post('asis_donante_crear', **self._donante(numDocumento='ana'))
+        self.post('asis_donante_crear', **self._donante(fechaNacimiento=(HOY - timedelta(days=365 * 10)).isoformat()))
+        self.post('asis_donante_crear', **self._donante(prioridad='suprema'))
+        self.post('asis_donante_crear', **self._donante(password_confirmation='otra'))
         self.assertFalse(Usuario.objects.filter(email='carlos@x.co').exists())
-        self.post('asis_cliente_crear', **self._cliente(rol='administrador'))
+        self.post('asis_donante_crear', **self._donante(rol='administrador'))
         self.assertEqual(Usuario.objects.get(email='carlos@x.co').rol, 'donante')
 
-    def test_editar_cliente_no_toca_datos_sensibles(self):
-        self.post('asis_cliente_editar', self.ana.id, email='nuevo@x.co', telefono='3200000000',
+    def test_editar_donante_no_toca_datos_sensibles(self):
+        self.post('asis_donante_editar', self.ana.id, email='nuevo@x.co', telefono='3200000000',
                   direccion='Otra dirección 99', necesidad='Ropa', prioridad='media', nombre='HACK',
                   num_documento='1', rol='administrador')
         self.ana.refresh_from_db()
         self.assertEqual((self.ana.email, self.ana.prioridad, self.ana.necesidad), ('nuevo@x.co', 'media', 'Ropa'))
         self.assertEqual((self.ana.nombre, self.ana.rol, self.ana.num_documento), ('Ana María', 'donante', 'ana'))
 
-    def test_editar_cliente_clave_opcional(self):
+    def test_editar_donante_clave_opcional(self):
         base = dict(email='ana@x.co', telefono='3001234567', direccion='Calle 1 # 2-3')
-        self.post('asis_cliente_editar', self.ana.id, **base)
+        self.post('asis_donante_editar', self.ana.id, **base)
         self.ana.refresh_from_db(); self.assertTrue(self.ana.check_password('Clave123*'))
-        self.post('asis_cliente_editar', self.ana.id, **base, password='Nuevita456*', password_confirmation='x')
+        self.post('asis_donante_editar', self.ana.id, **base, password='Nuevita456*', password_confirmation='x')
         self.ana.refresh_from_db(); self.assertTrue(self.ana.check_password('Clave123*'))
-        self.post('asis_cliente_editar', self.ana.id, **base, password='Nuevita456*', password_confirmation='Nuevita456*')
+        self.post('asis_donante_editar', self.ana.id, **base, password='Nuevita456*', password_confirmation='Nuevita456*')
         self.ana.refresh_from_db(); self.assertTrue(self.ana.check_password('Nuevita456*'))
 
     def test_asistente_no_puede_gestionar_a_administradores_ni_otros_asistentes(self):
         """En Laravel cualquier id servía: un asistente podía cambiar el correo/clave de un admin."""
         otro_asis = crear_usuario('otro@x.co', rol='asistente')
         for objetivo in (self.admin, otro_asis):
-            self.assertEqual(self.post('asis_cliente_editar', objetivo.id, email='robado@x.co', telefono='3001234567',
+            self.assertEqual(self.post('asis_donante_editar', objetivo.id, email='robado@x.co', telefono='3001234567',
                                        direccion='Calle 1 # 2-3', password='Hackeado123*',
                                        password_confirmation='Hackeado123*').status_code, 404)
-            self.assertEqual(self.post('asis_cliente_estado', objetivo.id).status_code, 404)
-            self.assertEqual(self.client.get(reverse('asis_cliente_historial', args=[objetivo.id])).status_code, 404)
+            self.assertEqual(self.post('asis_donante_estado', objetivo.id).status_code, 404)
+            self.assertEqual(self.client.get(reverse('asis_donante_historial', args=[objetivo.id])).status_code, 404)
         self.admin.refresh_from_db()
         self.assertEqual((self.admin.email, self.admin.estado), ('adm@x.co', 'activo'))
         self.assertTrue(self.admin.check_password('Clave123*'))
 
-    def test_toggle_estado_cliente(self):
-        self.post('asis_cliente_estado', self.ana.id)
+    def test_toggle_estado_donante(self):
+        self.post('asis_donante_estado', self.ana.id)
         self.ana.refresh_from_db(); self.assertEqual(self.ana.estado, 'inactivo')
-        self.post('asis_cliente_estado', self.ana.id)
+        self.post('asis_donante_estado', self.ana.id)
         self.ana.refresh_from_db(); self.assertEqual(self.ana.estado, 'activo')
 
-    def test_historial_cliente_json(self):
+    def test_historial_donante_json(self):
         d = Donacion.objects.create(descripcion='Mesa', categoria=self.cat)
         DonacionUsuario.objects.create(donante=self.ana, donacion=d)
         Solicitud.objects.create(descripcion='Cobijas', solicitante=self.ana, categoria=self.cat)
         Solicitud.objects.create(descripcion='Ajena', solicitante=self.beto, categoria=self.cat)
-        datos = self.client.get(reverse('asis_cliente_historial', args=[self.ana.id])).json()
+        datos = self.client.get(reverse('asis_donante_historial', args=[self.ana.id])).json()
         self.assertEqual([x['descripcion'] for x in datos['donaciones']], ['Mesa'])
         self.assertEqual([x['descripcion'] for x in datos['solicitudes']], ['Cobijas'])
         self.assertEqual(datos['donaciones'][0]['fecha'], HOY.strftime('%d/%m/%Y'))
-        self.assertEqual(self.post('asis_cliente_historial', self.ana.id).status_code, 405)
+        self.assertEqual(self.post('asis_donante_historial', self.ana.id).status_code, 405)
 
-    def test_correccion_para_cliente_y_perfil_propio(self):
+    def test_correccion_para_donante_y_perfil_propio(self):
         archivo = lambda: SimpleUploadedFile('c.png', PNG, content_type='image/png')
         base = {'campo': 'apellido', 'valorNuevo': 'Pérez Gómez', 'justificacion': 'Error de digitación',
                 'consentimiento': 'on'}
-        self.client.post(reverse('asis_cliente_correccion', args=[self.ana.id]), {**base, 'soporte': archivo()})
+        self.client.post(reverse('asis_donante_correccion', args=[self.ana.id]), {**base, 'soporte': archivo()})
         c = CorreccionDatos.objects.get()
         self.assertEqual((c.usuario, c.solicitante, c.valor_anterior, c.estado), (self.ana, self.asis, 'Pérez', 'pendiente'))
         self.client.post(reverse('asis_perfil_correccion'), {**base, 'soporte': archivo()})
         self.assertEqual(CorreccionDatos.objects.filter(usuario=self.asis, solicitante=self.asis).count(), 1)
-        self.client.post(reverse('asis_cliente_correccion', args=[self.admin.id]), {**base, 'soporte': archivo()})
+        self.client.post(reverse('asis_donante_correccion', args=[self.admin.id]), {**base, 'soporte': archivo()})
         self.assertEqual(CorreccionDatos.objects.count(), 2, 'no se puede pedir corrección sobre un admin')
         self.ana.refresh_from_db(); self.assertEqual(self.ana.apellido, 'Pérez')
 

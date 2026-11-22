@@ -82,8 +82,14 @@ class PanelDonanteTests(TestCase):
         self.assertTrue(d.imagen, 'sin archivo nuevo se conserva la imagen')
 
         self.client.post(reverse('usuario_donacion_cancelar', args=[d.id]))
-        self.assertFalse(Donacion.objects.exists())
-        self.assertFalse(DonacionUsuario.objects.exists())
+        # Cancelar no borra: la donación queda en el historial con estado "cancelada".
+        d.refresh_from_db()
+        self.assertEqual(d.estado, 'cancelada')
+        self.assertTrue(DonacionUsuario.objects.filter(donante=self.ana, donacion=d).exists())
+        html = self.client.get(reverse('dashboard_usuario'), {'tab': 'donaciones'}).content.decode()
+        self.assertTrue('Camisas talla L' in html)
+        # ya cancelada: no se vuelve a cancelar ni a editar
+        self.assertEqual(self.client.post(reverse('usuario_donacion_cancelar', args=[d.id])).status_code, 404)
 
     def test_donacion_invalida_no_se_crea(self):
         for datos in ({'descripcion': 'ab', 'idCategoria': self.cat.id, 'stock': 1},
@@ -138,7 +144,9 @@ class PanelDonanteTests(TestCase):
         self.assertEqual(self.client.post(reverse('usuario_solicitud_cancelar', args=[s.id])).status_code, 404)
         self.client.force_login(self.ana)
         self.client.post(reverse('usuario_solicitud_cancelar', args=[s.id]))
-        self.assertFalse(Solicitud.objects.exists())
+        s.refresh_from_db()
+        self.assertEqual(s.estado, 'cancelada')      # queda en el historial, como las visitas
+        self.assertEqual(self.client.post(reverse('usuario_solicitud_cancelar', args=[s.id])).status_code, 404)
 
     # ── visitas ──
     def test_visitas_una_activa_cancelar_y_nota(self):

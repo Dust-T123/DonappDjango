@@ -1,17 +1,90 @@
 import re
-from datetime import date
+from datetime import date, datetime
 
 from django import forms
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.utils.dateparse import parse_date
 
 from .models import (
     CAMPOS_CORRECCION, ESTADOS_DONACION, ESTADOS_EVENTO, TIPOS_DOCUMENTO, Categoria, Usuario, calcular_edad,
 )
 
 SOLO_LETRAS = re.compile(r'^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$')
-DOCUMENTO = re.compile(r'^[A-Za-z0-9]{4,15}$')
+# Reglas del número según el tipo de documento (como en la vida real):
+#   CC, TI, CE, TE y PPT son numéricos; solo el pasaporte mezcla letras y números.
+DOCUMENTO_NUMERICO = re.compile(r'^[0-9]{4,15}$')
+DOCUMENTO_ALFANUMERICO = re.compile(r'^[A-Za-z0-9]{4,15}$')
+TIPOS_CON_LETRAS = ('Pasaporte',)
+MSG_DOCUMENTO_NUMERICO = ('El número de documento debe tener entre 4 y 15 dígitos y solo puede '
+                          'contener números (para {tipo} no se permiten letras).')
+MSG_DOCUMENTO_ALFANUMERICO = ('El número de pasaporte debe tener entre 4 y 15 caracteres y solo puede '
+                              'contener letras y números (sin espacios ni símbolos).')
+MSG_DOCUMENTO = ('El número de documento debe tener entre 4 y 15 caracteres y solo puede '
+                 'contener letras y números (sin espacios ni símbolos).')
+# Límites comunes a los tres paneles (registro, perfil, altas y ediciones del personal).
+CLAVE_MIN, CLAVE_MAX = 6, 30
+MSG_CLAVE_MAX = f'La contraseña no puede superar {CLAVE_MAX} caracteres.'
+OBSERVACION_ESTADO_MAX = 200   # donacion.observacion es varchar(200)
+
+
+def normalizar_documento(valor):
+    """Quita espacios y deja el documento en mayúsculas (así 'ab123' y 'AB123' son el mismo)."""
+    return (valor or '').strip().upper()
+
+
+def validar_numero_documento(tipo, numero):
+    """Mensaje de error si `numero` no es válido para el tipo de documento; None si lo es."""
+    if tipo in TIPOS_CON_LETRAS:
+        return None if DOCUMENTO_ALFANUMERICO.match(numero) else MSG_DOCUMENTO_ALFANUMERICO
+    if tipo in dict(TIPOS_DOCUMENTO):
+        return None if DOCUMENTO_NUMERICO.match(numero) else MSG_DOCUMENTO_NUMERICO.format(tipo=tipo)
+    return None if DOCUMENTO_ALFANUMERICO.match(numero) else MSG_DOCUMENTO
+
+
+def validar_valor_correccion(campo, valor, usuario=None):
+    """Valida el valor propuesto en una corrección de datos según el campo.
+
+    Devuelve (valor_normalizado, None) o (None, mensaje). No consulta la base de datos
+    (la unicidad del documento la revisa quien aprueba). Con `usuario`, el número de documento
+    se valida contra el tipo de documento que ese usuario tiene hoy.
+    """
+    valor = (valor or '').strip()
+    if campo == 'numDocumento':
+        valor = normalizar_documento(valor)
+        error = validar_numero_documento(getattr(usuario, 'tipo_documento', None), valor)
+        if error:
+            return None, 'El número de documento propuesto no es válido. ' + error
+        return valor, None
+    if campo == 'tipoDocumento':
+        if valor not in dict(TIPOS_DOCUMENTO):
+            return None, 'Tipo de documento propuesto no es válido.'
+        return valor, None
+    if campo == 'fechaNacimiento':
+        fecha = None
+        try:
+            fecha = parse_date(valor)
+        except ValueError:
+            fecha = None
+        if fecha is None:
+            try:
+                fecha = datetime.strptime(valor, '%d/%m/%Y').date()
+            except ValueError:
+                return None, 'La fecha de nacimiento propuesta no es válida (usa AAAA-MM-DD).'
+        if fecha > date.today() or calcular_edad(fecha) < 14:
+            return None, ('La fecha de nacimiento propuesta indica una edad menor a 14 años, '
+                          'no permitida en la plataforma.')
+        return fecha, None
+    if campo in ('nombre', 'apellido'):
+        minimo = 3 if campo == 'nombre' else 2
+        valor = ' '.join(valor.split())
+        if not minimo <= len(valor) <= 100:
+            return None, f'El {campo} propuesto debe tener entre {minimo} y 100 caracteres.'
+        if not SOLO_LETRAS.match(valor):
+            return None, f'El {campo} propuesto solo puede contener letras y espacios.'
+        return valor, None
+    return valor, None
 
 
 class RegistroForm(forms.Form):
@@ -35,7 +108,9 @@ class RegistroForm(forms.Form):
                         'invalid_choice': 'El tipo de documento no es válido.'},
     )
     numDocumento = forms.CharField(
-        error_messages={'required': 'El número de documento es obligatorio.'},
+        max_length=15,
+        error_messages={'required': 'El número de documento es obligatorio.',
+                        'max_length': 'El número de documento no puede superar 15 caracteres.'},
     )
     fechaNacimiento = forms.DateField(
         error_messages={'required': 'La fecha de nacimiento es obligatoria.',
@@ -52,15 +127,19 @@ class RegistroForm(forms.Form):
                         'invalid': 'Escribe un correo electrónico válido.'},
     )
     telefono = forms.CharField(
-        error_messages={'required': 'El teléfono es obligatorio.'},
+        max_length=10,
+        error_messages={'required': 'El teléfono es obligatorio.',
+                        'max_length': 'El teléfono debe tener exactamente 10 dígitos.'},
     )
     password = forms.CharField(
-        min_length=6, max_length=30,
+        min_length=CLAVE_MIN, max_length=CLAVE_MAX,
         error_messages={'required': 'La contraseña es obligatoria.',
-                        'min_length': 'La contraseña debe tener al menos 6 caracteres.'},
+                        'min_length': 'La contraseña debe tener al menos 6 caracteres.',
+                        'max_length': MSG_CLAVE_MAX},
     )
     password_confirmation = forms.CharField(
-        error_messages={'required': 'Debes repetir la contraseña.'},
+        max_length=CLAVE_MAX,
+        error_messages={'required': 'Debes repetir la contraseña.', 'max_length': MSG_CLAVE_MAX},
     )
     # La columna usuario.necesidad es varchar(255).
     necesidad = forms.CharField(max_length=255, required=False)
@@ -69,22 +148,24 @@ class RegistroForm(forms.Form):
     )
 
     def clean_nombre(self):
-        nombre = self.cleaned_data['nombre'].strip()
+        nombre = ' '.join(self.cleaned_data['nombre'].split())
         if not SOLO_LETRAS.match(nombre):
             raise ValidationError('El nombre solo puede contener letras y espacios.')
         return nombre
 
     def clean_apellido(self):
-        apellido = self.cleaned_data['apellido'].strip()
+        apellido = ' '.join(self.cleaned_data['apellido'].split())
         if not SOLO_LETRAS.match(apellido):
             raise ValidationError('El apellido solo puede contener letras y espacios.')
         return apellido
 
     def clean_numDocumento(self):
-        numero = self.cleaned_data['numDocumento'].strip()
-        if not DOCUMENTO.match(numero):
-            raise ValidationError('El número de documento no es válido.')
-        if Usuario.objects.filter(num_documento=numero).exists():
+        numero = normalizar_documento(self.cleaned_data['numDocumento'])
+        # tipoDocumento se declara antes, así que ya está limpio aquí (si fue inválido, falta).
+        error = validar_numero_documento(self.cleaned_data.get('tipoDocumento'), numero)
+        if error:
+            raise ValidationError(error)
+        if Usuario.objects.filter(num_documento__iexact=numero).exists():
             raise ValidationError('Este número de documento ya está registrado.')
         return numero
 
@@ -201,9 +282,10 @@ class PerfilDonanteForm(forms.Form):
                                 error_messages={'required': 'La dirección es obligatoria.',
                                                 'min_length': 'La dirección debe tener al menos 5 caracteres.'})
     necesidad = forms.CharField(required=False, max_length=255)
-    password_actual = forms.CharField(required=False)
-    password = forms.CharField(required=False)
-    password_confirmation = forms.CharField(required=False)
+    password_actual = forms.CharField(required=False, max_length=128)
+    password = forms.CharField(required=False, max_length=CLAVE_MAX, error_messages={'max_length': MSG_CLAVE_MAX})
+    password_confirmation = forms.CharField(required=False, max_length=CLAVE_MAX,
+                                            error_messages={'max_length': MSG_CLAVE_MAX})
 
     def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
@@ -247,6 +329,19 @@ class CorreccionForm(forms.Form):
     soporte = forms.FileField(error_messages={'required': 'Adjunta el documento de identidad.'})
     consentimiento = forms.BooleanField(error_messages={'required': 'Debes autorizar el tratamiento del documento.'})
 
+    def __init__(self, *args, usuario=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario   # a quién se le corrige el dato (define el tipo de documento vigente)
+
+    def clean(self):
+        datos = super().clean()
+        campo, valor = datos.get('campo'), datos.get('valorNuevo')
+        if campo and valor:
+            _, error = validar_valor_correccion(campo, valor, self.usuario)
+            if error:
+                self.add_error('valorNuevo', error)
+        return datos
+
     def clean_soporte(self):
         archivo = self.cleaned_data['soporte']
         extension = archivo.name.rsplit('.', 1)[-1].lower() if '.' in archivo.name else ''
@@ -264,7 +359,7 @@ class CorreccionForm(forms.Form):
 
 # ── FORMULARIOS COMPARTIDOS ASISTENTE / ADMINISTRADOR ────────────────────────
 
-SOLO_CATEGORIA = re.compile(r'^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s()\-]+$')
+SOLO_CATEGORIA = re.compile(r'^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s()\-,:.]+$')
 PRIORIDADES_VALIDAS = [(v, v) for v in ('urgente', 'alta', 'media', 'baja')]
 
 
@@ -284,7 +379,7 @@ class CategoriaForm(forms.Form):
         nombre = ' '.join(self.cleaned_data['nombre_categoria'].split())
         if not SOLO_CATEGORIA.match(nombre):
             raise ValidationError('El nombre de una categoría solo puede contener letras, espacios, '
-                                  'guiones y paréntesis (nunca números).')
+                                  'guiones, paréntesis, comas, puntos y dos puntos (nunca números).')
         if Categoria.objects.filter(nombre__iexact=nombre).exclude(pk=self.excluir_pk).exists():
             raise ValidationError('Ya existe una categoría con ese nombre.')
         return nombre
@@ -301,9 +396,11 @@ class EventoForm(forms.Form):
     lugar_entrega = forms.CharField(min_length=3, max_length=255,
                                     error_messages={'required': 'El lugar de entrega es obligatorio.',
                                                     'min_length': 'El lugar debe tener al menos 3 caracteres.'})
-    titulo_pub = forms.CharField(min_length=3, max_length=200,
+    # Se guarda en evento.nombre (varchar 150): con 200 el servidor fallaba al guardar.
+    titulo_pub = forms.CharField(min_length=3, max_length=150,
                                  error_messages={'required': 'El título de la publicación es obligatorio.',
-                                                 'min_length': 'El título debe tener al menos 3 caracteres.'})
+                                                 'min_length': 'El título debe tener al menos 3 caracteres.',
+                                                 'max_length': 'El título no puede superar 150 caracteres.'})
     contenido_pub = forms.CharField(min_length=10, max_length=500,
                                     error_messages={'required': 'El contenido es obligatorio.',
                                                     'min_length': 'El contenido debe tener al menos 10 caracteres.'})
@@ -340,8 +437,9 @@ class EstadoGestionForm(forms.Form):
     """Cambio de estado de una donación o solicitud, con observación opcional."""
     estado = forms.ChoiceField(choices=ESTADOS_DONACION, error_messages={'required': 'Selecciona un estado.',
                                                                            'invalid_choice': 'El estado no es válido.'})
-    observacion = forms.CharField(required=False, max_length=250,
-                                  error_messages={'max_length': 'La observación no puede superar 250 caracteres.'})
+    # donacion.observacion es varchar(200): con 250 el guardado fallaba (error 500).
+    observacion = forms.CharField(required=False, max_length=OBSERVACION_ESTADO_MAX,
+                                  error_messages={'max_length': f'La observación no puede superar {OBSERVACION_ESTADO_MAX} caracteres.'})
 
     def clean(self):
         datos = super().clean()
@@ -358,7 +456,7 @@ class EstadoVisitaForm(forms.Form):
     observacion = forms.CharField(required=False, max_length=500)
 
 
-class ClienteCrearForm(RegistroForm):
+class DonanteCrearForm(RegistroForm):
     """Alta de un donante/solicitante hecha por el personal (no acepta términos: es presencial)."""
     aceptaTerminos = None
     prioridad = forms.ChoiceField(choices=PRIORIDADES_VALIDAS, required=False,
@@ -368,11 +466,11 @@ class ClienteCrearForm(RegistroForm):
     def clean_fechaNacimiento(self):
         fecha = self.cleaned_data['fechaNacimiento']
         if fecha > date.today() or calcular_edad(fecha) < 14:
-            raise ValidationError('El cliente debe tener al menos 14 años.')
+            raise ValidationError('El donante/solicitante debe tener al menos 14 años.')
         return fecha
 
 
-class ClienteEditarForm(forms.Form):
+class DonanteEditarForm(forms.Form):
     """Solo campos NO sensibles de un donante (los de identidad van por corrección)."""
     email = forms.EmailField(max_length=150, error_messages={'required': 'El correo es obligatorio.',
                                                                'invalid': 'Escribe un correo electrónico válido.'})
@@ -385,8 +483,9 @@ class ClienteEditarForm(forms.Form):
     prioridad = forms.ChoiceField(choices=PRIORIDADES_VALIDAS, required=False,
                                   error_messages={'invalid_choice': 'La prioridad no es válida.'})
     observacion_visita = forms.CharField(required=False, max_length=500)
-    password = forms.CharField(required=False, max_length=30)
-    password_confirmation = forms.CharField(required=False)
+    password = forms.CharField(required=False, max_length=CLAVE_MAX, error_messages={'max_length': MSG_CLAVE_MAX})
+    password_confirmation = forms.CharField(required=False, max_length=CLAVE_MAX,
+                                            error_messages={'max_length': MSG_CLAVE_MAX})
 
     def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
@@ -436,8 +535,10 @@ class PerfilPersonalForm(forms.Form):
 class ConfirmarPasswordForm(forms.Form):
     codigo = forms.RegexField(regex=r'^\d{6}$', error_messages={'required': 'Ingresa el código de 6 dígitos.',
                                                                  'invalid': 'El código debe tener 6 dígitos.'})
-    password = forms.CharField(max_length=30, error_messages={'required': 'La nueva contraseña es obligatoria.'})
-    password_confirmation = forms.CharField(error_messages={'required': 'Debes repetir la contraseña.'})
+    password = forms.CharField(max_length=CLAVE_MAX, error_messages={'required': 'La nueva contraseña es obligatoria.',
+                                                                    'max_length': MSG_CLAVE_MAX})
+    password_confirmation = forms.CharField(max_length=CLAVE_MAX, error_messages={
+        'required': 'Debes repetir la contraseña.', 'max_length': MSG_CLAVE_MAX})
 
     def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
@@ -463,7 +564,7 @@ ROLES_VALIDOS = [(v, v) for v in ('administrador', 'asistente', 'donante')]
 ESTADOS_CUENTA = [(v, v) for v in ('activo', 'inactivo')]
 
 
-class UsuarioAdminCrearForm(ClienteCrearForm):
+class UsuarioAdminCrearForm(DonanteCrearForm):
     """Alta de cualquier usuario (incluido personal). Necesidad/prioridad solo aplican a donantes."""
     rol = forms.ChoiceField(choices=ROLES_VALIDOS, error_messages={'required': 'Selecciona un rol.',
                                                                    'invalid_choice': 'El rol no es válido.'})
@@ -477,7 +578,7 @@ class UsuarioAdminCrearForm(ClienteCrearForm):
         return fecha
 
 
-class UsuarioAdminEditarForm(ClienteEditarForm):
+class UsuarioAdminEditarForm(DonanteEditarForm):
     """Edición de un usuario por el administrador: contacto, rol, estado y (si es donante) seguimiento."""
     rol = forms.ChoiceField(choices=ROLES_VALIDOS, error_messages={'required': 'Selecciona un rol.',
                                                                    'invalid_choice': 'El rol no es válido.'})

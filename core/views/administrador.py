@@ -17,8 +17,6 @@ Mejoras de seguridad respecto al original:
 
 import json
 import logging
-import re
-from datetime import datetime
 
 from django.contrib import messages
 from django.db import transaction
@@ -26,20 +24,22 @@ from django.db.models import Count, Q
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
-from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET, require_POST
 
 from ..decorators import rol_requerido
-from ..forms import RechazoCorreccionForm, UsuarioAdminCrearForm, UsuarioAdminEditarForm, calcular_edad
-from ..models import TIPOS_DOCUMENTO, Categoria, CorreccionDatos, Evento, Usuario
+from ..forms import (
+    RechazoCorreccionForm, UsuarioAdminCrearForm, UsuarioAdminEditarForm, validar_numero_documento,
+    validar_valor_correccion,
+)
+from ..models import Categoria, CorreccionDatos, Evento, Usuario
 from ..notificaciones import notificar_correccion
+from ..utils import fecha_hace_anios
 from .comun import ATRIBUTO_CORRECCION, a_panel, almacen_privado, primer_error, procesar_correccion
 from .gestion import ORDEN_PRIORIDAD, _iso, _rank_prioridad, datos_gestion
 
 logger = logging.getLogger(__name__)
 
 PANEL = 'dashboard_administrador'
-DOCUMENTO_VALIDO = re.compile(r'^[A-Za-z0-9]{4,15}$')
 
 # Nombres de URL que usan las plantillas y el JS compartidos con el asistente.
 RUTAS = {
@@ -72,7 +72,7 @@ def dashboard_administrador(request):
     if g.get('sort') == 'prioridad':
         usuarios = usuarios.annotate(_r=_rank_prioridad('prioridad')).order_by('_r', '-id')
     else:
-        usuarios = usuarios.order_by({'az': 'nombre', 'za': '-nombre'}.get(g.get('sort'), '-id'))
+        usuarios = usuarios.order_by(*{'az': ('nombre', 'id'), 'za': ('-nombre', 'id')}.get(g.get('sort'), ('-id',)))
     usuarios = list(usuarios)
     for u in usuarios:
         u.json = json.dumps({
@@ -102,7 +102,7 @@ def dashboard_administrador(request):
         'categorias_existentes': [{'id': c.id, 'nombre': c.nombre.strip().lower()} for c in categorias] if not
         g.get('cat_search') else [{'id': c.id, 'nombre': c.nombre.strip().lower()}
                                   for c in Categoria.objects.all()],
-        'edad_minima_nacimiento': timezone.localdate().replace(year=timezone.localdate().year - 14),
+        'edad_minima_nacimiento': fecha_hace_anios(14, timezone.localdate()),
         'ruta': RUTAS,
     }
     return render(request, 'core/dashboard_administrador.html', contexto)
@@ -189,32 +189,22 @@ def usuario_solicitar_correccion(request, pk):
 # ── CORRECCIONES DE DATOS (doble control) ────────────────────────────────────
 
 def _validar_valor_correccion(campo, valor, usuario):
-    """Devuelve (valor_normalizado, None) o (None, mensaje_de_error)."""
-    if campo == 'numDocumento':
-        if not DOCUMENTO_VALIDO.match(valor):
-            return None, 'El número de documento propuesto no es válido.'
-        if Usuario.objects.filter(num_documento=valor).exclude(pk=usuario.pk).exists():
-            return None, 'Ese número de documento ya está registrado por otro usuario.'
-    elif campo == 'tipoDocumento':
-        if valor not in dict(TIPOS_DOCUMENTO):
-            return None, 'Tipo de documento propuesto no es válido.'
-    elif campo == 'fechaNacimiento':
-        fecha = parse_date(valor)
-        if fecha is None:
-            try:
-                fecha = datetime.strptime(valor, '%d/%m/%Y').date()
-            except ValueError:
-                return None, 'La fecha de nacimiento propuesta no es válida (usa AAAA-MM-DD).'
-        if fecha > timezone.localdate() or calcular_edad(fecha) < 14:
-            return None, ('La fecha de nacimiento propuesta indica una edad menor a 14 años, '
-                          'no permitida en la plataforma.')
-        return fecha, None
-    elif campo == 'nombre':
-        if not 3 <= len(valor) <= 100:
-            return None, 'El nombre propuesto debe tener entre 3 y 100 caracteres.'
-    elif campo == 'apellido':
-        if not 2 <= len(valor) <= 100:
-            return None, 'El apellido propuesto debe tener entre 2 y 100 caracteres.'
+    """Devuelve (valor_normalizado, None) o (None, mensaje_de_error).
+
+    El formato lo valida `validar_valor_correccion` (el mismo que se aplica al crear la
+    solicitud); aquí se añade solo lo que depende de la base de datos."""
+    valor, error = validar_valor_correccion(campo, valor, usuario)
+    if error:
+        return None, error
+    if campo == 'tipoDocumento':
+        # El nuevo tipo debe ser coherente con el número que el usuario tiene hoy.
+        error = validar_numero_documento(valor, usuario.num_documento)
+        if error:
+            return None, ('El número actual del documento no es válido para ese tipo. Corrige primero '
+                          'el número de documento. ' + error)
+    if campo == 'numDocumento' and Usuario.objects.filter(num_documento__iexact=valor) \
+            .exclude(pk=usuario.pk).exists():
+        return None, 'Ese número de documento ya está registrado por otro usuario.'
     return valor, None
 
 
