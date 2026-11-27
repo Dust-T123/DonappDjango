@@ -70,7 +70,9 @@ class RolesTests(TestCase):
         crear_usuario(email='asis@correo.com', rol='asistente')
         self.client.login(email='asis@correo.com', password='Clave-Segura-9')
         r = self.client.get(reverse('dashboard_administrador'))
-        self.assertRedirects(r, reverse('dashboard_asistente'), fetch_redirect_response=False)
+        self.assertEqual(r.status_code, 403)
+        self.assertTemplateUsed(r, 'core/acceso_denegado.html')
+        self.assertContains(r, reverse('dashboard_asistente'), status_code=403)
 
     def test_cuenta_desactivada_pierde_la_sesion(self):
         u = crear_usuario()

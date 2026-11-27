@@ -75,6 +75,46 @@
         });
     }
 
+    // ── Límites únicos para los campos que comparten varios módulos ─────────────────
+    // [mínimo, máximo] igual que en core/forms.py. Se aplican a cualquier formulario de la página,
+    // así un campo no puede aceptar más (ni menos) caracteres en un módulo que en otro.
+    var LIMITES = {
+        nombre: [3, 100], apellido: [2, 100], direccion: [5, 255], email: [0, 150], necesidad: [0, 255],
+        observacion_visita: [0, 500], password: [6, 30], password_confirmation: [0, 30],
+        new_password1: [6, 30], new_password2: [0, 30], contrasena: [0, 30], nombre_categoria: [3, 100],
+        justificacion: [10, 300], valorNuevo: [0, 150], texto: [3, 500]
+    };
+    function aplicarLimites() {
+        document.querySelectorAll('input, textarea').forEach(function (el) {
+            var l = LIMITES[el.name];
+            if (!l || !activo(el)) return;
+            if (el.name === 'nombre' && el.closest('form') && el.closest('form').querySelector('[name="nombre_categoria"]')) return;
+            el.setAttribute('maxlength', String(l[1]));
+            if (l[0] > 0) el.setAttribute('minlength', String(l[0]));
+        });
+    }
+
+    // ── Campos solo numéricos: cantidad (1–9999) y código de verificación (6 dígitos) ─────
+    function soloNumericos() {
+        document.querySelectorAll('input[name="stock"]').forEach(function (inp) {
+            if (!activo(inp)) return;
+            inp.setAttribute('inputmode', 'numeric');
+            inp.setAttribute('min', '1'); inp.setAttribute('max', '9999');
+            inp.addEventListener('keydown', function (e) {
+                if (['e', 'E', '+', '-', '.', ','].indexOf(e.key) !== -1) e.preventDefault();
+            });
+            inp.addEventListener('input', function () {
+                var l = this.value.replace(/\D/g, '').slice(0, 4);
+                if (this.value !== l) this.value = l;
+            });
+        });
+        document.querySelectorAll('input[name="codigo"]').forEach(function (inp) {
+            if (!activo(inp)) return;
+            inp.setAttribute('maxlength', '6'); inp.setAttribute('inputmode', 'numeric'); inp.setAttribute('pattern', '[0-9]{6}');
+            enVivo(inp, function (v) { return v.replace(/\D/g, '').slice(0, 6); });
+        });
+    }
+
     // ── Solicitudes de corrección: el campo "valor propuesto" depende del campo elegido ──
     var TIPOS = ['CC', 'TI', 'CE', 'TE', 'PPT', 'Pasaporte'];
 
@@ -149,7 +189,7 @@
     // ── Celdas con texto largo: recortar y mostrar el completo en el tooltip ──
     function marcarCeldasLargas() {
         document.querySelectorAll('.table-wrap td').forEach(function (td) {
-            if (td.classList.contains('td-actions') || td.querySelector('button, a, form, input, select, textarea')) return;
+            if (td.classList.contains('td-actions') || td.classList.contains('td-wrap') || td.querySelector('button, a, form, input, select, textarea')) return;
             var texto = (td.textContent || '').replace(/\s+/g, ' ').trim();
             var recortable = td.classList.contains('td-desc') || td.classList.contains('td-cat') ||
                              td.classList.contains('td-obs') || td.classList.contains('td-trunc');
@@ -164,6 +204,8 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         inicializarCampos();
+        aplicarLimites();
+        soloNumericos();
         inicializarCorrecciones();
         marcarCeldasLargas();
     });

@@ -5,24 +5,46 @@
 
 {% block styles %}
     <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+{% endblock %}
+{% block styles_late %}
+    <link rel="stylesheet" href="{% static 'assets/css/landing.css' %}">
 {% endblock %}
 
 {% block content %}
 
+<header class="site-nav" id="site-nav">
+    <div class="site-nav-inner">
+        <a class="site-nav-brand" href="#inicio" aria-label="Donapp, volver al inicio">
+            <img class="logo-light" src="{% static 'assets/uploads/Red-Logo.png' %}" alt="Donapp">
+            <img class="logo-dark" src="{% static 'assets/uploads/White-Logo.png' %}" alt="">
+        </a>
+        <nav class="site-nav-links" aria-label="Secciones de la página">
+            <a href="#impacto">Impacto</a>
+            <a href="#como-funciona">Cómo funciona</a>
+            <a href="#nosotros">Nosotros</a>
+            <a href="#eventos">Eventos</a>
+            <a href="#galeria">Galería</a>
+        </nav>
+        <div class="site-nav-cta">
+            <a class="btn btn-secondary btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'registro' %}">Registrarse</a>
+        </div>
+    </div>
+</header>
+
 <div id="landing-page" class="page active">
 
     <!-- ===== HERO ===== -->
-    <section class="hero-video-section">
+    <section class="hero-video-section" id="inicio">
         <div class="hero-particles" id="particles-container"></div>
         <div class="hero-overlay"></div>
 
         <div class="hero-video-content">
             <a href="{% url 'index' %}">
-                <img src="{% static 'assets/uploads/White-Logo.png' %}" alt="Donapp Logo" class="logo-site">
+                <img src="{% static 'assets/uploads/Red-Logo.png' %}" alt="Donapp Logo" class="logo-site logo-light">
+                <img src="{% static 'assets/uploads/White-Logo.png' %}" alt="" class="logo-site logo-dark">
             </a>
+            <span class="hero-eyebrow"><span class="dot" aria-hidden="true"></span>Fundación CES Waldorf · Ciudad Bolívar</span>
             <h1 class="hero-title">
                 <span class="title-gradient">Dona</span> lo que no usas,<br>
                 <span class="title-gradient">Recibe</span> lo que necesitas
@@ -38,28 +60,28 @@
 
             <div class="hero-stats">
                 <div class="hero-stat">
-                    <span class="stat-icon">🎁</span>
+                    <span class="stat-icon"><i class="fa-solid fa-gift" aria-hidden="true"></i></span>
                     <div>
                         <strong>+{{ statsDonaciones }}</strong>
                         <span>Donaciones</span>
                     </div>
                 </div>
                 <div class="hero-stat">
-                    <span class="stat-icon">👥</span>
+                    <span class="stat-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
                     <div>
                         <strong>+{{ statsUsuarios }}</strong>
                         <span>Usuarios</span>
                     </div>
                 </div>
                 <div class="hero-stat">
-                    <span class="stat-icon">📅</span>
+                    <span class="stat-icon"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></span>
                     <div>
                         <strong>{{ statsEventos }}</strong>
                         <span>Eventos activos</span>
                     </div>
                 </div>
                 <div class="hero-stat">
-                    <span class="stat-icon">📍</span>
+                    <span class="stat-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
                     <div>
                         <strong>1</strong>
                         <span>Punto de entrega</span>
@@ -68,37 +90,84 @@
             </div>
 
             <!-- Indicador de actualización en vivo -->
-            <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;opacity:0.75">
-                <span id="stats-live-indicator" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:0.78rem;color:#fff;cursor:default;transition:all 0.3s" title="Estadísticas actualizándose cada 30 segundos">
-                    <i class="fa-solid fa-circle" style="font-size:0.5rem;color:#4ade80;animation:pulse 2s infinite"></i>
-                    Actualizando en tiempo real
-                </span>
+            <div class="hero-live">
+                <span id="stats-live-indicator" class="live-pill"><span class="dot" aria-hidden="true"></span>Actualizando en tiempo real</span>
             </div>
         </div>
     </section>
 
     <div class="landing-container">
 
+                <!-- ===== IMPACTO EN VIVO ===== -->
+        <section class="impacto-section" id="impacto" aria-labelledby="impacto-title" data-reveal>
+            <div class="section-head rise">
+                <span class="eyebrow"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Impacto en vivo</span>
+                <h2 class="section-title" id="impacto-title">Cada donación cuenta</h2>
+                <p class="section-subtitle">Las cifras se leen directamente de la plataforma y se actualizan solas. Pasa el cursor sobre los gráficos para ver el detalle.</p>
+            </div>
+            <div class="kpi-grid">
+                <article class="kpi-card rise">
+                    <div class="kpi-icon"><i class="fa-solid fa-gift" aria-hidden="true"></i></div>
+                    <div class="kpi-num" data-kpi="total_donaciones" aria-live="polite">{{ statsDonaciones|default:0 }}</div>
+                    <div class="kpi-label">Donaciones registradas</div>
+                    <div class="kpi-meter" role="presentation"><i id="meter-donaciones"></i></div>
+                    <div class="kpi-foot"><span id="foot-donaciones">Calculando…</span></div>
+                </article>
+                <article class="kpi-card rise">
+                    <div class="kpi-icon"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i></div>
+                    <div class="kpi-num" data-kpi="total_solicitudes" aria-live="polite">0</div>
+                    <div class="kpi-label">Solicitudes recibidas</div>
+                    <div class="kpi-meter" role="presentation"><i id="meter-solicitudes"></i></div>
+                    <div class="kpi-foot"><span id="foot-solicitudes">Calculando…</span></div>
+                </article>
+                <article class="kpi-card rise">
+                    <div class="kpi-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></div>
+                    <div class="kpi-num" data-kpi="total_donantes" aria-live="polite">{{ statsUsuarios|default:0 }}</div>
+                    <div class="kpi-label">Donantes activos</div>
+                    <div class="kpi-foot"><span>Personas que ya hacen parte de la comunidad</span></div>
+                </article>
+                <article class="kpi-card rise">
+                    <div class="kpi-icon"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></div>
+                    <div class="kpi-num" data-kpi="eventos_activos" aria-live="polite">{{ statsEventos|default:0 }}</div>
+                    <div class="kpi-label">Eventos activos</div>
+                    <div class="kpi-foot"><span>Con entrega o jornada abierta</span></div>
+                </article>
+            </div>
+            <div class="chart-grid">
+                <article class="chart-card rise">
+                    <h3>Estado de las donaciones</h3>
+                    <p>Aprobadas, pendientes y otros estados.</p>
+                    <div class="chart-box"><canvas id="chart-donaciones" role="img" aria-label="Gráfico circular con el estado de las donaciones"></canvas></div>
+                </article>
+                <article class="chart-card rise">
+                    <h3>Donaciones y solicitudes</h3>
+                    <p>Total frente a las aprobadas.</p>
+                    <div class="chart-box"><canvas id="chart-solicitudes" role="img" aria-label="Gráfico de barras con el total y las aprobadas de donaciones y solicitudes"></canvas></div>
+                </article>
+            </div>
+            <p class="impact-status" id="impact-status" role="status"></p>
+        </section>
+
         <!-- ===== CÓMO FUNCIONA ===== -->
-        <div class="features-section">
-            <h2 class="section-title">¿Cómo funciona?</h2>
+        <div class="features-section" id="como-funciona" data-reveal>
+            <div class="section-head rise"><span class="eyebrow">Paso a paso</span><h2 class="section-title">¿Cómo funciona?</h2></div>
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card rise">
                     <div class="feature-number">01</div>
                     <h3>Regístrate</h3>
                     <p>Crea tu cuenta en Donapp y forma parte de la comunidad solidaria de Ciudad Bolívar</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card rise">
                     <div class="feature-number">02</div>
                     <h3>Publica</h3>
                     <p>Ofrece productos que ya no usas o solicita lo que necesitas a través de la plataforma</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card rise">
                     <div class="feature-number">03</div>
                     <h3>Acércate</h3>
                     <p>La fundación CES Waldorf gestiona la entrega. Todo se hace en Sierra Morena, Ciudad Bolívar</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card rise">
                     <div class="feature-number">04</div>
                     <h3>Impacta</h3>
                     <p>Cada donación ayuda a reutilizar y darle una segunda oportunidad a los productos</p>
@@ -107,9 +176,9 @@
         </div>
 
         <!-- ===== SOBRE NOSOTROS ===== -->
-        <section class="sobre-nosotros-section">
+        <section class="sobre-nosotros-section" id="nosotros" data-reveal>
             <div class="sobre-content">
-                <div class="sobre-text">
+                <div class="sobre-text rise">
                     <span class="sobre-tag">¿Quiénes somos?</span>
                     <h2 class="sobre-title">Fundación CES Waldorf</h2>
                     <p class="sobre-description">
@@ -138,7 +207,7 @@
                         Conoce más sobre nosotros
                     </a>
                 </div>
-                <div class="sobre-visual">
+                <div class="sobre-visual rise">
                     <div class="sobre-badge-grid">
                         <div class="sobre-badge">
                             <i class="fa-solid fa-child-reaching"></i>
@@ -168,17 +237,12 @@
         </section>
 
         <!-- ===== PRÓXIMOS EVENTOS (cargados desde API REST) ===== -->
-        <div class="publicaciones-section">
-            <div style="text-align:center;margin-bottom:0.5rem">
-                <h2 class="section-title" style="margin-bottom:0.25rem">Próximos Eventos</h2>
-                <p class="section-subtitle" style="margin-bottom:1rem">
-                    Entérate de las próximas actividades de la fundación
-                </p>
-                <div class="badge-tiempo-real" style="display:inline-flex;align-items:center;gap:8px;background:rgba(11,90,166,0.07);border:1px solid rgba(11,90,166,0.18);border-radius:20px;padding:5px 14px;font-size:0.82rem;font-weight:600;margin-bottom:1.5rem">
-                    <i class="fa-solid fa-circle" style="font-size:0.5rem;color:#22c55e;animation:pulse 2s infinite"></i>
-                    Datos en tiempo real
-                    <span id="eventos-api-count" style="display:none;background:var(--color-primary);color:#fff;border-radius:20px;padding:1px 8px;font-size:0.75rem;margin-left:4px"></span>
-                </div>
+        <div class="publicaciones-section" id="eventos" data-reveal>
+            <div class="section-head rise">
+                <span class="eyebrow">Agenda</span>
+                <h2 class="section-title">Próximos Eventos</h2>
+                <p class="section-subtitle">Entérate de las próximas actividades de la fundación</p>
+                <span class="live-pill badge-tiempo-real"><span class="dot" aria-hidden="true"></span>Datos en tiempo real<span id="eventos-api-count" class="live-count"></span></span>
             </div>
 
             <!-- Spinner mientras carga -->
@@ -193,8 +257,32 @@
             <div id="eventos-api-grid" class="publicaciones-grid"></div>
         </div>
 
+        <!-- ===== GALERÍA ===== -->
+        <section class="galeria-section" id="galeria" aria-labelledby="galeria-title" data-reveal>
+            <div class="section-head rise">
+                <span class="eyebrow"><i class="fa-regular fa-images" aria-hidden="true"></i> Galería</span>
+                <h2 class="section-title" id="galeria-title">Momentos de la comunidad</h2>
+                <p class="section-subtitle">Imágenes de los eventos publicados por la fundación. Haz clic en una para verla en grande.</p>
+            </div>
+            <div id="gal-grid" class="gal-grid" aria-busy="true">
+                <div class="gal-skeleton"></div><div class="gal-skeleton"></div><div class="gal-skeleton"></div><div class="gal-skeleton"></div><div class="gal-skeleton"></div>
+            </div>
+        </section>
+
+
     </div>
 </div>
+
+<!-- ===== VISOR DE GALERÍA ===== -->
+<dialog id="lightbox" class="lightbox" aria-label="Visor de imágenes">
+    <button type="button" class="lb-btn lb-close" id="lb-close" aria-label="Cerrar visor"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    <button type="button" class="lb-btn lb-prev" id="lb-prev" aria-label="Imagen anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <button type="button" class="lb-btn lb-next" id="lb-next" aria-label="Imagen siguiente"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+    <figure class="lb-fig">
+        <img id="lb-img" src="" alt="">
+        <figcaption class="lb-cap"><strong id="lb-title"></strong><span id="lb-meta"></span><div class="lb-count" id="lb-count"></div></figcaption>
+    </figure>
+</dialog>
 
 <!-- ===== MODAL DETALLE PUBLICACIÓN ===== -->
 <div id="modal-detalle-publicacion" class="modal">
@@ -268,6 +356,8 @@
 
 {% block scripts %}
 <script src="{% static 'assets/js/index.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{% static 'assets/js/landing.js' %}"></script>
 <script>
     // Partículas animadas para el hero
     (function() {

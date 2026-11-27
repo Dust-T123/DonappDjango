@@ -36,7 +36,7 @@
                 </div>
                 {% else %}
                 <div class="table-wrap"><table>
-                    <thead><tr><th>Artículo</th><th>Categoría</th><th>Cantidad disponible</th><th># Donaciones que lo componen</th></tr></thead>
+                    <thead><tr><th>Artículo</th><th>Categoría</th><th>Cantidad disponible</th><th># Donaciones que lo componen</th><th>Detalle</th></tr></thead>
                     <tbody>
                         {% for item in inventario %}
                         <tr>
@@ -44,6 +44,7 @@
                             <td>{{ item.categoria__nombre|default:"—" }}</td>
                             <td><span class="badge estado-aprobada" style="font-size:0.95rem">{{ item.total_stock }} disponibles</span></td>
                             <td>{{ item.num_donaciones }}</td>
+                            <td class="td-actions"><button type="button" class="btn btn-sm btn-secondary" data-json="{{ item.json }}" onclick="detalleStock(JSON.parse(this.dataset.json))" title="Ver el nombre completo y los datos del artículo" aria-label="Ver detalle del artículo {{ item.descripcion|truncatechars:40 }}"><i class="fa-solid fa-eye" aria-hidden="true"></i> Ver</button></td>
                         </tr>
                         {% endfor %}
                     </tbody>

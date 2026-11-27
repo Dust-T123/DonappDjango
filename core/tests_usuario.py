@@ -46,9 +46,13 @@ class PanelDonanteTests(TestCase):
     def test_redireccion_por_rol(self):
         url = reverse('dashboard_usuario')
         self.client.force_login(self.asis)
-        self.assertRedirects(self.client.get(url), reverse('dashboard_asistente'), fetch_redirect_response=False)
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 403)
+        self.assertContains(r, reverse('dashboard_asistente'), status_code=403)
         self.client.force_login(self.admin)
-        self.assertRedirects(self.client.get(url), reverse('dashboard_administrador'), fetch_redirect_response=False)
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 403)
+        self.assertContains(r, reverse('dashboard_administrador'), status_code=403)
         self.client.logout()
         self.assertRedirects(self.client.get(url), reverse('login'), fetch_redirect_response=False)
 

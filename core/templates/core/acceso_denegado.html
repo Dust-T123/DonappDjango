@@ -1,0 +1,21 @@
+{% extends "core/layouts/app.html" %}
+{% load static %}
+{% block title %}Acceso restringido · Donapp{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'assets/css/admin_style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/token.css' %}">
+{% endblock %}
+{% block content %}
+<main class="recover-card access-card" role="alert">
+    <div class="access-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></div>
+    <h1>Acceso restringido</h1>
+    <p>Tu sesión es de <strong>{{ rol_actual }}</strong>, pero esta sección es solo para <strong>{{ roles_permitidos }}</strong>.</p>
+    <p class="access-note">Por seguridad no mostramos nada de este módulo. El intento quedó registrado.</p>
+    <div class="access-actions">
+        <a class="btn btn-primary" href="{{ panel_url }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Ir a mi panel</a>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+            <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Cerrar sesión</button>
+        </form>
+    </div>
+</main>
+{% endblock %}

@@ -1,17 +1,23 @@
+import logging
 from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
 from .utils import PANEL_POR_ROL, ruta_por_rol
+
+logger = logging.getLogger('donapp.seguridad')
+
+ETIQUETA_ROL = {'administrador': 'administrador', 'asistente': 'asistente', 'donante': 'donante / solicitante'}
 
 
 def rol_requerido(*roles):
     """Equivalente al middleware CheckRole de Laravel.
 
     - Sin sesión: manda al login.
-    - Con sesión pero rol equivocado: lo devuelve a su propio panel.
+    - Con sesión pero rol equivocado: respuesta 403 con una pantalla de «acceso restringido»
+      (no se muestra nada del módulo ajeno) y queda registrado el intento.
     - Con un rol inexistente: cierra la sesión y avisa (no hay panel al que mandarlo).
     La cuenta inactiva y el cambio de contraseña ya los maneja Django: cierra la
     sesión en la siguiente petición (is_active=False o hash de sesión distinto).
@@ -29,8 +35,12 @@ def rol_requerido(*roles):
                 messages.error(request, 'Tu cuenta tiene un rol no válido. Comunícate con el administrador.')
                 return redirect('login')
             if request.user.rol not in roles:
-                messages.error(request, 'Acceso no autorizado.')
-                return redirect(ruta_por_rol(request.user))
+                logger.warning('Acceso denegado: usuario=%s rol=%s ruta=%s', request.user.pk, request.user.rol, request.path)
+                return render(request, 'core/acceso_denegado.html', {
+                    'rol_actual': ETIQUETA_ROL.get(request.user.rol, request.user.rol),
+                    'roles_permitidos': ' o '.join(ETIQUETA_ROL.get(r, r) for r in roles),
+                    'panel_url': ruta_por_rol(request.user),
+                }, status=403)
             return vista(request, *args, **kwargs)
         return envoltura
     return decorador

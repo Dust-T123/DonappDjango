@@ -34,9 +34,9 @@
                             <td class="td-actions">
                                 <button type="button" class="btn btn-sm {% if v.editable %}btn-primary{% else %}btn-secondary{% endif %}"
                                         data-json="{{ v.json }}" onclick="abrirModalVisita(JSON.parse(this.dataset.json))"
-                                        title="{% if v.editable %}Gestionar visita{% else %}Ver detalles y bitácora{% endif %}">
+                                        title="{% if v.editable %}Gestionar visita{% else %}Ver todos los detalles y la bitácora{% endif %}">
                                     <i class="fa-solid {% if v.editable %}fa-pen-to-square{% else %}fa-eye{% endif %}"></i>
-                                    {% if v.editable %}Gestionar{% else %}Ver bitácora{% endif %}
+                                    {% if v.editable %}Gestionar{% else %}Ver detalle{% endif %}
                                 </button>
                             </td>
                         </tr>

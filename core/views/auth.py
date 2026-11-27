@@ -8,94 +8,41 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 
-from ..forms import DonappPasswordResetForm, RegistroForm
+from django.core.cache import cache
+
+from ..forms import DonappPasswordResetForm, DonappSetPasswordForm, RegistroForm
 from ..models import Usuario
 from ..utils import PANEL_POR_ROL, ruta_por_rol
-from functools import wraps
-from django.shortcuts import redirect
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from ..models import (
-    Usuario, Categoria, Evento, Donacion, Solicitud, 
-    DonacionUsuario, VisitaDomiciliaria, VisitaObservacion, CorreccionDatos
-)
-BACKEND = 'django.contrib.auth.backends.ModelBackend'
-
-
 from passlib.context import CryptContext
+
+BACKEND = 'django.contrib.auth.backends.ModelBackend'
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def rol_requerido(*roles_permitidos):
-    """
-    Decorador para restringir el acceso a vistas según el rol del usuario.
-    Si no cumple con el rol, lo redirige a su panel asignado.
-    """
-    def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            if not request.user.is_authenticated:
-                messages.error(request, 'Debes iniciar sesión para acceder.')
-                return redirect('login')
-            
-            if request.user.rol not in roles_permitidos:
-                messages.error(request, 'No tienes permisos para acceder a esta sección.')
-                return redirect(ruta_por_rol(request.user))
-                
-            return view_func(request, *args, **kwargs)
-        return _wrapped_view
-    return decorator
-
-# ── AUXILIAR DE REDIRECCIÓN ──────────────────────────────────────────────────
-
-def ruta_por_rol(usuario):
-    """
-    Retorna el nombre del name en urls.py según el rol del usuario.
-    """
-    if usuario.rol == 'administrador':
-        return 'dashboard_administrador'
-    elif usuario.rol == 'asistente':
-        return 'dashboard_asistente'
-    return 'dashboard_usuario'
+# Límite de intentos fallidos de inicio de sesión (por correo y por IP).
+MAX_INTENTOS_LOGIN = 5          # por correo
+MAX_INTENTOS_IP = 30            # por IP (más alto: varias personas pueden compartir red)
+VENTANA_BLOQUEO_SEG = 15 * 60
 
 
-@login_required
-def dashboard_administrador(request):
-    if request.user.rol != 'administrador':
-        return redirect(ruta_por_rol(request.user))
-
-    context = {
-        'total_usuarios': Usuario.objects.count(),
-        'total_donaciones': Donacion.objects.count(),
-        'solicitudes_pendientes': Solicitud.objects.filter(estado='pendiente').count(),
-        'visitas_pendientes': VisitaDomiciliaria.objects.filter(estado='pendiente').count(),
-        'ultimos_usuarios': Usuario.objects.order_by('-id')[:5],
-    }
-    return render(request, 'core/dashboard_administrador.html', context)
+def _claves_intentos(request, email):
+    ip = request.META.get('REMOTE_ADDR', '')
+    return (f'login_fallos:mail:{email.lower()}', f'login_fallos:ip:{ip}')
 
 
-@login_required
-def dashboard_asistente(request):
-    if request.user.rol not in ('asistente', 'administrador'):
-        return redirect(ruta_por_rol(request.user))
-
-    context = {
-        'visitas_pendientes': VisitaDomiciliaria.objects.filter(estado='pendiente'),
-        'solicitudes_revision': Solicitud.objects.filter(estado='pendiente'),
-    }
-    return render(request, 'core/dashboard_asistente.html', context)
+def _bloqueado(request, email):
+    clave_mail, clave_ip = _claves_intentos(request, email)
+    return cache.get(clave_mail, 0) >= MAX_INTENTOS_LOGIN or cache.get(clave_ip, 0) >= MAX_INTENTOS_IP
 
 
-@login_required
-def dashboard_usuario(request):
-    # Donante / Usuario regular
-    context = {
-        'mis_donaciones': DonacionUsuario.objects.filter(donante=request.user),
-        'mis_solicitudes': Solicitud.objects.filter(solicitante=request.user),
-        'mis_visitas': VisitaDomiciliaria.objects.filter(usuario=request.user),
-    }
-    return render(request, 'core/dashboard_usuario.html', context)
+def _registrar_fallo(request, email):
+    for k in _claves_intentos(request, email):
+        cache.set(k, cache.get(k, 0) + 1, VENTANA_BLOQUEO_SEG)
+
+
+def _limpiar_fallos(request, email):
+    cache.delete(_claves_intentos(request, email)[0])
+
+
 # ── LOGIN VIEW ───────────────────────────────────────────────────────────────
 
 def login_view(request):
@@ -110,15 +57,21 @@ def login_view(request):
             messages.error(request, 'El correo y la contraseña son obligatorios.')
             return render(request, 'core/login.html')
 
+        if _bloqueado(request, email):
+            messages.error(request, 'Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo.')
+            return render(request, 'core/login.html')
+
         usuario = Usuario.objects.filter(email__iexact=email).first()
 
         if usuario is None:
+            _registrar_fallo(request, email)
             messages.error(request, 'No encontramos una cuenta con ese correo electrónico.')
         elif not usuario.is_active:
             messages.error(request, 'Tu acceso ha sido restringido por el administrador.')
         elif usuario.rol not in PANEL_POR_ROL:
             messages.error(request, 'Tu cuenta tiene un rol no válido. Comunícate con el administrador.')
         elif not usuario.check_password(contrasena):
+            _registrar_fallo(request, email)
             messages.error(request, 'Contraseña incorrecta. Verifica tus credenciales.')
         else:
             # Compatibilidad con hashes de Laravel ($2y$/$2a$), Django (pbkdf2/bcrypt) y texto plano
@@ -136,8 +89,10 @@ def login_view(request):
                 es_valida = usuario.check_password(contrasena)
 
             if not es_valida:
+                _registrar_fallo(request, email)
                 messages.error(request, 'Contraseña incorrecta. Verifica tus credenciales.')
             else:
+                _limpiar_fallos(request, email)
                 login(request, usuario, backend=BACKEND)
                 # Redirección directa según el rol del usuario autenticado
                 return redirect(ruta_por_rol(usuario))
@@ -216,6 +171,7 @@ class DonappRecuperarView(SuccessMessageMixin, PasswordResetView):
 
 class DonappRestablecerView(SuccessMessageMixin, PasswordResetConfirmView):
     template_name = 'core/restablecer.html'
+    form_class = DonappSetPasswordForm
     success_url = reverse_lazy('login')
     success_message = 'Contraseña restablecida. Ya puedes iniciar sesión.'
     post_reset_login = False

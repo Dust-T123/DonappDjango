@@ -42,7 +42,9 @@ class PanelAsistenteTests(TestCase):
         self.assertEqual(self.client.get(url).status_code, 200)
         for quien, destino in ((self.ana, 'dashboard_usuario'), (self.admin, 'dashboard_administrador')):
             self.client.force_login(quien)
-            self.assertRedirects(self.client.get(url), reverse(destino), fetch_redirect_response=False)
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 403)
+            self.assertContains(r, reverse(destino), status_code=403)
         self.client.logout()
         self.assertRedirects(self.client.get(url), reverse('login'), fetch_redirect_response=False)
 

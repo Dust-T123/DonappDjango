@@ -2,7 +2,7 @@ import re
 from datetime import date, datetime
 
 from django import forms
-from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils.dateparse import parse_date
@@ -199,6 +199,24 @@ class RegistroForm(forms.Form):
                 except ValidationError as error:
                     self.add_error('password', error)
         return datos
+
+
+class DonappSetPasswordForm(SetPasswordForm):
+    """Restablecer contraseña (enlace del correo) con los mismos límites que registro y perfil:
+    entre CLAVE_MIN y CLAVE_MAX caracteres."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in ('new_password1', 'new_password2'):
+            self.fields[campo].max_length = CLAVE_MAX
+            self.fields[campo].min_length = CLAVE_MIN
+            self.fields[campo].widget.attrs.update({'maxlength': CLAVE_MAX, 'minlength': CLAVE_MIN})
+
+    def clean_new_password1(self):
+        clave = self.cleaned_data.get('new_password1') or ''
+        if len(clave) > CLAVE_MAX:
+            raise ValidationError(MSG_CLAVE_MAX)
+        return clave
 
 
 class DonappPasswordResetForm(PasswordResetForm):

@@ -74,3 +74,19 @@ registrationForm.onsubmit = function(e) {
         return false;
     }
 };
+
+// Si la persona ya aceptó los Términos y Condiciones (en esta o en otra pestaña), la casilla se marca sola.
+(function () {
+    const casilla = document.getElementById('aceptaTerminos');
+    if (!casilla) return;
+    function aceptados() {
+        try {
+            const t = parseInt(localStorage.getItem('donapp:terminos'), 10);
+            return !isNaN(t) && Date.now() - t < 60 * 60 * 1000;     // vigente por 1 hora
+        } catch (e) { return false; }
+    }
+    if (aceptados()) casilla.checked = true;
+    window.addEventListener('storage', function (e) {
+        if (e.key === 'donapp:terminos' && aceptados()) casilla.checked = true;
+    });
+})();

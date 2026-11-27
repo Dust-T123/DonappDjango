@@ -47,10 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const acceptBtn = document.getElementById('acceptBtn');
     let   barShown  = false;
 
+    // La barra fija mide distinto en móvil: el botón de preferencias se coloca justo encima de ella.
+    function medirBarra() {
+        document.documentElement.style.setProperty('--accept-bar-h', acceptBar.offsetHeight + 'px');
+    }
+    window.addEventListener('resize', medirBarra);
+
     function showAcceptBar() {
         if (barShown) return;
         acceptBar.classList.add('visible');
         document.body.classList.add('accept-bar-open');  // reserva espacio inferior
+        medirBarra();
         barShown = true;
     }
 
@@ -64,12 +71,23 @@ document.addEventListener('DOMContentLoaded', () => {
         acceptBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i>&nbsp; ¡Aceptado!';
         acceptBtn.classList.add('confirmed');
 
-        setTimeout(() => {
-            // Ocultar con clase en lugar de style inline
-            acceptBar.classList.remove('visible');
-            acceptBar.classList.add('accepted');      // pointer-events:none vuelve via CSS
-            document.body.classList.remove('accept-bar-open');
-        }, 1200);
+        // Se recuerda la aceptación: el formulario de registro marca la casilla solo (también en otra pestaña).
+        try { localStorage.setItem('donapp:terminos', String(Date.now())); } catch (e) { /* sin almacenamiento */ }
+
+        // Destino según el estado: con sesión iniciada → su panel; sin sesión → registro
+        // (o inicio de sesión si venía de allí).
+        const d = acceptBar.dataset;
+        let destino, mensaje;
+        if (d.autenticado === '1' && d.panel) {
+            destino = d.panel; mensaje = 'Gracias por aceptar. Te llevamos a tu panel…';
+        } else if (document.referrer && /\/login\/?(\?|$)/.test(new URL(document.referrer, location.href).pathname)) {
+            destino = d.login; mensaje = 'Gracias por aceptar. Te llevamos al inicio de sesión…';
+        } else {
+            destino = d.registro; mensaje = 'Gracias por aceptar. Te llevamos al registro…';
+        }
+        const msg = document.getElementById('acceptMsg');
+        if (msg) msg.textContent = mensaje;
+        setTimeout(() => { window.location.assign(destino); }, 1200);
     }
 
     if (acceptBtn) {
