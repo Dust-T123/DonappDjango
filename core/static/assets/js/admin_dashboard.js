@@ -100,6 +100,15 @@ function toggleCamposDonante(rolSelectId, grpPrioridadId, grpObsId) {
     const mostrar = (rol === 'donante' || rol === '');
     document.getElementById(grpPrioridadId).style.display = mostrar ? 'block' : 'none';
     document.getElementById(grpObsId).style.display = mostrar ? 'block' : 'none';
+    // «Necesidad» también es solo de donantes: grp_nuevo_prioridad -> grp_nuevo_nec, grp_eu_prioridad -> grp_eu_nec
+    const nec = document.getElementById(grpPrioridadId.replace('prioridad', 'nec'));
+    if (nec) nec.style.display = mostrar ? 'block' : 'none';
+    if (!mostrar) {
+        // No se envían datos de seguimiento al crear/editar personal (el servidor igualmente los descarta).
+        [grpPrioridadId, grpObsId, nec && nec.id].filter(Boolean).forEach(id => {
+            document.getElementById(id).querySelectorAll('input,select,textarea').forEach(c => { c.value = ''; });
+        });
+    }
 }
 
 // ─────────────────────────────────────────────

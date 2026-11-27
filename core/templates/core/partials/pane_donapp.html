@@ -42,7 +42,7 @@
                             <td>{{ d.fecha|date:"d/m/Y"|default:"—" }}</td>
                             <td>{{ d.donante_nombre|default:"—" }}</td>
                             <td class="td-obs">{{ d.observacion|default:"—" }}</td>
-                            <td>{% if d.estado == 'cancelada' %}<span class="text-muted" title="Cancelada: queda como constancia en el historial"><i class="fa-solid fa-lock"></i></span>{% else %}<button type="button" data-json="{{ d.json }}" onclick="abrirModalDonacion(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary" title="Gestionar"><i class="fa-solid fa-pen-to-square"></i></button>{% endif %}</td>
+                            <td class="td-actions"><button type="button" class="btn btn-sm btn-secondary" data-json="{{ d.json }}" onclick="detalleDonacion(JSON.parse(this.dataset.json))" title="Ver detalle completo (solo lectura)" aria-label="Ver detalle (solo lectura)"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>{% if d.estado != 'cancelada' %} <button type="button" data-json="{{ d.json }}" onclick="abrirModalDonacion(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary" title="Gestionar"><i class="fa-solid fa-pen-to-square"></i></button>{% endif %}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="9" class="empty-row">No se encontraron donaciones.</td></tr>
@@ -90,7 +90,7 @@
                             </td>
                             <td>{{ s.gestor.nombre|default:"—" }}</td>
                             <td class="td-obs">{{ s.observacion|default:"—" }}</td>
-                            <td>{% if s.estado == 'cancelada' %}<span class="text-muted" title="Cancelada: queda como constancia en el historial"><i class="fa-solid fa-lock"></i></span>{% else %}<button type="button" data-json="{{ s.json }}" onclick="abrirModalSolicitud(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary" title="Gestionar"><i class="fa-solid fa-pen-to-square"></i></button>{% endif %}</td>
+                            <td class="td-actions"><button type="button" class="btn btn-sm btn-secondary" data-json="{{ s.json }}" onclick="detalleSolicitud(JSON.parse(this.dataset.json))" title="Ver detalle completo (solo lectura)" aria-label="Ver detalle (solo lectura)"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>{% if s.estado != 'cancelada' %} <button type="button" data-json="{{ s.json }}" onclick="abrirModalSolicitud(JSON.parse(this.dataset.json))" class="btn btn-sm btn-primary" title="Gestionar"><i class="fa-solid fa-pen-to-square"></i></button>{% endif %}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="9" class="empty-row">No se encontraron solicitudes.</td></tr>

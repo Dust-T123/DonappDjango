@@ -1,0 +1,34 @@
+<a class="ds-skip" href="#ds-main">Saltar al contenido</a>
+<div class="ds-dock" role="region" aria-label="Preferencias visuales">
+    <div id="ds-a11y" class="ds-a11y" role="dialog" aria-labelledby="ds-a11y-title" hidden>
+        <h2 id="ds-a11y-title">Accesibilidad visual</h2>
+        <div class="ds-a11y-row">
+            <span id="ds-fs-label">Tamaño del texto</span>
+            <div class="ds-stepper" role="group" aria-labelledby="ds-fs-label">
+                <button type="button" id="ds-fs-down" aria-label="Disminuir tamaño del texto">A−</button>
+                <output id="ds-fs-out" aria-live="polite">100%</output>
+                <button type="button" id="ds-fs-up" aria-label="Aumentar tamaño del texto">A+</button>
+            </div>
+        </div>
+        <div class="ds-a11y-row" style="display:block">
+            <label for="ds-boost" style="display:flex;justify-content:space-between">
+                <span>Contraste</span><output id="ds-boost-out">0%</output>
+            </label>
+            <input type="range" id="ds-boost" min="0" max="100" step="5" value="0">
+        </div>
+        <div class="ds-a11y-row">
+            <label for="ds-hc">Modo de alto contraste</label>
+            <span class="ds-switch"><input type="checkbox" id="ds-hc"><i aria-hidden="true"></i></span>
+        </div>
+        <button type="button" class="ds-a11y-reset" id="ds-reset">Restablecer preferencias</button>
+    </div>
+    <div class="ds-dock-row">
+        <button type="button" class="ds-dock-btn" id="ds-theme" role="switch" aria-checked="false" aria-label="Modo oscuro">
+            <i class="fa-solid fa-sun ds-theme-icon-sun" aria-hidden="true"></i>
+            <i class="fa-solid fa-moon ds-theme-icon-moon" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="ds-dock-btn" id="ds-a11y-btn" aria-expanded="false" aria-controls="ds-a11y" aria-label="Opciones de accesibilidad">
+            <i class="fa-solid fa-universal-access" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>

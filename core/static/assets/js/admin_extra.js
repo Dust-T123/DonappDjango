@@ -28,8 +28,7 @@ function abrirModalVisita(v) {
         ? '<i class="fa-solid fa-floppy-disk"></i> Guardar'
         : '<i class="fa-solid fa-note-sticky"></i> Agregar nota';
 
-    document.getElementById('vis_detalle').innerHTML =
-        `<p><strong>Beneficiario:</strong> ${escHtml(v.usuario || '—')}</p>`;
+    document.getElementById('vis_detalle').innerHTML = detalleVisitaHtml(v);
 
     const hist = v.historial || [];
     document.getElementById('vis_historial').innerHTML = hist.length

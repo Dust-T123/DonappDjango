@@ -6,12 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Donapp{% endblock %}</title>
+    <script>(function(){var d=document.documentElement,t='light';try{var s=localStorage;t=s.getItem('donapp:theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var f=parseFloat(s.getItem('donapp:fs'));if(f)d.style.setProperty('--ds-fs',f);var b=parseInt(s.getItem('donapp:boost'),10);if(b)d.style.setProperty('--ds-boost',b);if(s.getItem('donapp:hc')==='1')d.setAttribute('data-contrast','high');}catch(e){}d.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="{% static 'assets/uploads/Icon.png' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% block styles %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'assets/css/donapp-ds.css' %}">
+    {% block styles_late %}{% endblock %}
 </head>
 <body>
     {% block content %}{% endblock %}
+
+    {% include "core/partials/ds_controls.html" %}
 
     <!-- Mensajes de éxito (Equivalente a session('success') de Laravel usando SweetAlert2) -->
     {% if messages %}
@@ -30,6 +38,7 @@
     {% endfor %}
     {% endif %}
 
+    <script src="{% static 'assets/js/donapp-ds.js' %}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

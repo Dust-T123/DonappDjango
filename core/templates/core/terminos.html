@@ -472,9 +472,12 @@
     </main>
 
     {# ═══════════════ BARRA DE ACEPTACIÓN FIJA ═══════════════ #}
-    <div class="tc-accept-bar" id="acceptBar" role="region" aria-label="Aceptar términos">
-        <p>Al usar Donapp declaras haber leído y aceptado estos Términos y Condiciones y nuestra Política de Habeas Data.</p>
-        <button class="btn-accept" id="acceptBtn">
+    <div class="tc-accept-bar" id="acceptBar" role="region" aria-label="Aceptar términos"
+         data-autenticado="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+         data-panel="{% if request.user.is_authenticated %}{% if request.user.rol == 'administrador' %}{% url 'dashboard_administrador' %}{% elif request.user.rol == 'asistente' %}{% url 'dashboard_asistente' %}{% else %}{% url 'dashboard_usuario' %}{% endif %}{% endif %}"
+         data-registro="{% url 'registro' %}" data-login="{% url 'login' %}">
+        <p id="acceptMsg" aria-live="polite">Al usar Donapp declaras haber leído y aceptado estos Términos y Condiciones y nuestra Política de Habeas Data.</p>
+        <button type="button" class="btn-accept" id="acceptBtn">
             <i class="fa-solid fa-circle-check"></i>&nbsp; He leído y acepto
         </button>
     </div>

@@ -42,8 +42,23 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'core.middleware.SesionSeguraMiddleware',   # va después de sesión, auth y mensajes
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# ── Sesiones y cookies ───────────────────────────────────────────────────────
+# Inactividad máxima antes de cerrar la sesión (segundos) y duración absoluta de la cookie.
+SESION_INACTIVIDAD_SEG = env.int('SESION_INACTIVIDAD_SEG', default=1800)
+SESSION_COOKIE_AGE = env.int('SESION_DURACION_SEG', default=60 * 60 * 8)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+# Poner COOKIES_SEGURAS=True en .env cuando el sitio se sirva por HTTPS.
+SESSION_COOKIE_SECURE = env.bool('COOKIES_SEGURAS', default=False)
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
 
 ROOT_URLCONF = 'config.urls'
 

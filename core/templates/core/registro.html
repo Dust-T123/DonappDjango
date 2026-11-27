@@ -67,7 +67,7 @@
 
         <div class="input-group">
             <label for="telefono"><i class="fa-solid fa-phone"></i> Teléfono o Celular</label>
-            <input type="text" name="telefono" id="telefono"
+            <input type="text" name="telefono" pattern="[0-9]{10}" inputmode="numeric" id="telefono"
                    placeholder="Digita tus 10 números de teléfono"
                    required maxlength="10" onkeypress="return soloNumeros(event)">
         </div>
@@ -99,7 +99,7 @@
 
         <div class="input-group full-width">
             <label for="direccion"><i class="fa-solid fa-location-dot"></i> Dirección de Residencia</label>
-            <input type="text" name="direccion" id="direccion"
+            <input type="text" name="direccion" minlength="5" id="direccion"
                    placeholder="Escribe tu dirección actual de vivienda"
                    required maxlength="255">
         </div>

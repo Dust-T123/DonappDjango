@@ -42,7 +42,10 @@ class PanelAdministradorTests(TestCase):
         self.assertEqual(self.client.get(url).status_code, 200)
         for quien, destino in ((self.asis, 'dashboard_asistente'), (self.ana, 'dashboard_usuario')):
             self.client.force_login(quien)
-            self.assertRedirects(self.client.get(url), reverse(destino), fetch_redirect_response=False)
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 403)
+            self.assertTemplateUsed(r, 'core/acceso_denegado.html')
+            self.assertContains(r, reverse(destino), status_code=403)
             self.post('adm_usuario_crear', email='x@x.co')
             self.post('adm_usuario_estado', self.ana.id)
             self.post('adm_categoria_crear', nombre_categoria='Intrusa')
@@ -276,7 +279,7 @@ class PanelAdministradorTests(TestCase):
         self.assertTrue(b''.join(r.streaming_content).startswith(b'\x89PNG'))
         for quien in (self.asis, self.ana):
             self.client.force_login(quien)
-            self.assertEqual(self.client.get(url).status_code, 302, 'solo administradores')
+            self.assertEqual(self.client.get(url).status_code, 403, 'solo administradores')
 
     def test_soporte_purgado_o_con_contenido_extrano_da_404(self):
         c = self._correccion()

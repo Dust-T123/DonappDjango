@@ -1,16 +1,17 @@
 {% extends 'core/layouts/app.html' %}
-{% load static %}
+{% load static donapp_extras %}
 
 {% block title %}Donapp — Panel Administrativo{% endblock %}
 
 {% block styles %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <link rel="stylesheet" href="{% static 'assets/css/admin_style.css' %}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
-        .perfil-lock-notice{display:flex;align-items:center;gap:14px;background:#fff8e6;border:1px solid #f0d78c;
+        .perfil-lock-notice{display:flex;align-items:center;gap:14px;background:var(--tone-amber-bg);border:1px solid color-mix(in srgb,#E08A00 45%,transparent);color:var(--text);
             border-radius:10px;padding:14px 16px;margin-bottom:20px;}
-        .perfil-lock-notice > i{font-size:22px;color:#b8860b;flex-shrink:0;}
+        .perfil-lock-notice > i{font-size:22px;color:var(--tone-amber-ink);flex-shrink:0;}
         .perfil-lock-notice > div{flex:1;}
         .perfil-lock-notice .btn{flex-shrink:0;white-space:nowrap;}
         .form-group input:disabled, .form-group select:disabled{background:#f2f2f2;color:#666;cursor:not-allowed;}
@@ -115,7 +116,7 @@
                         <tr>
                             <td class="td-trunc">{{ c.usuario.nombre|default:"—" }}</td>
                             <td class="td-trunc">{% if c.solicitante_id == c.usuario_id %}<span class="text-muted">El mismo usuario</span>{% else %}{{ c.solicitante.nombre|default:"—" }}{% endif %}</td>
-                            <td>{{ c.get_campo_display }}</td>
+                            <td>{{ c.campo|campo_legible }}</td>
                             <td class="td-trunc"><strong>{{ c.valor_nuevo }}</strong></td>
                             <td>{{ c.fecha_solicitud|date:"d/m/Y"|default:"—" }}</td>
                             <td class="td-actions">
@@ -347,6 +348,23 @@
               onsubmit="return validarPassModal('cu_pass','cu_pass2','cu_pass_err')">
             {% csrf_token %}
             <div class="form-grid-2">
+                <p class="form-hint" style="grid-column:1/-1;margin:0"><i class="fa-solid fa-circle-info"></i> Elige primero el rol: los campos de seguimiento solo se piden para donantes/solicitantes.</p>
+                <div class="form-group">
+                    <label>Rol *</label>
+                    <select name="rol" id="nuevo_rol" class="form-input" required
+                            onchange="toggleCamposDonante('nuevo_rol','grp_nuevo_prioridad','grp_nuevo_obs')">
+                        <option value="donante">Donante / Solicitante</option>
+                        <option value="asistente">Asistente</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado *</label>
+                    <select name="estado" class="form-input" required>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Nombre *</label>
                     <input type="text" name="nombre" class="form-input" required minlength="3" maxlength="100"
@@ -398,39 +416,6 @@
                            placeholder="Ingrese el número de contacto">
                 </div>
                 <div class="form-group">
-                    <label>Necesidad <small>(opcional)</small></label>
-                    <input type="text" name="necesidad" id="nuevo_necesidad" class="form-input" maxlength="300"
-                           placeholder="Describa la necesidad del usuario">
-                </div>
-                <div class="form-group" id="grp_nuevo_prioridad" style="display:none;">
-                    <label>Prioridad</label>
-                    <select name="prioridad" id="nuevo_prioridad" class="form-input">
-                        <option value="">Sin prioridad</option>
-                        <option value="urgente">Urgente</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option>
-                    </select>
-                </div>
-                <div class="form-group" id="grp_nuevo_obs" style="display:none;">
-                    <label>Observación</label>
-                    <textarea name="observacion_visita" id="nuevo_obs_visita" class="form-input" rows="3" maxlength="500"
-                              placeholder="Observación del usuario"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Rol *</label>
-                    <select name="rol" id="nuevo_rol" class="form-input" required
-                            onchange="toggleCamposDonante('nuevo_rol','grp_nuevo_prioridad','grp_nuevo_obs')">
-                        <option value="donante">Donante / Solicitante</option>
-                        <option value="asistente">Asistente</option>
-                        <option value="administrador">Administrador</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Estado *</label>
-                    <select name="estado" class="form-input" required>
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Contraseña *</label>
                     <div class="pass-wrap">
                         <input type="password" name="password" id="cu_pass" class="form-input"
@@ -450,6 +435,25 @@
                         </button>
                     </div>
                 </div>
+                <fieldset class="solo-donante" style="grid-column:1/-1;border:0;padding:0;margin:0;display:contents">
+                <div class="form-group" id="grp_nuevo_nec">
+                    <label>Necesidad <small>(opcional)</small></label>
+                    <input type="text" name="necesidad" id="nuevo_necesidad" class="form-input" maxlength="255"
+                           placeholder="Describa la necesidad del usuario">
+                </div>
+                <div class="form-group" id="grp_nuevo_prioridad" style="display:none;">
+                    <label>Prioridad</label>
+                    <select name="prioridad" id="nuevo_prioridad" class="form-input">
+                        <option value="">Sin prioridad</option>
+                        <option value="urgente">Urgente</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option>
+                    </select>
+                </div>
+                <div class="form-group" id="grp_nuevo_obs" style="display:none;">
+                    <label>Observación</label>
+                    <textarea name="observacion_visita" id="nuevo_obs_visita" class="form-input" rows="3" maxlength="500"
+                              placeholder="Observación del usuario"></textarea>
+                </div>
+                </fieldset>
             </div>
             <div id="cu_pass_err" class="field-error" style="display:none;">Las contraseñas no coinciden.</div>
             <div class="modal-footer">
@@ -515,9 +519,9 @@
                     <label>Teléfono *</label>
                     <input type="tel" name="telefono" id="eu_tel" class="form-input" required pattern="[0-9]{10}" maxlength="10">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="grp_eu_nec">
                     <label>Necesidad</label>
-                    <input type="text" name="necesidad" id="eu_nec" class="form-input" maxlength="300">
+                    <input type="text" name="necesidad" id="eu_nec" class="form-input" maxlength="255">
                 </div>
                 <div class="form-group" id="grp_eu_prioridad" style="display:none;">
                     <label>Prioridad</label>
@@ -793,6 +797,7 @@
 </script>
 <script src="{% static 'assets/js/admin.js' %}"></script>
 <script src="{% static 'assets/js/admin_dashboard.js' %}"></script>
+<script src="{% static 'assets/js/gestion_detalle.js' %}"></script>
 <script src="{% static 'assets/js/admin_extra.js' %}"></script>
 <script src="{% static 'assets/js/validaciones.js' %}"></script>
 {% endblock %}

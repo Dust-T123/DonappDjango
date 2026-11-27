@@ -1,16 +1,17 @@
 {% extends 'core/layouts/app.html' %}
-{% load static %}
+{% load static donapp_extras %}
 
 {% block title %}Donapp — Panel de Moderación{% endblock %}
 
 {% block styles %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <link rel="stylesheet" href="{% static 'assets/css/asis_style.css' %}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
-        .perfil-lock-notice{display:flex;align-items:center;gap:14px;background:#fff8e6;border:1px solid #f0d78c;
+        .perfil-lock-notice{display:flex;align-items:center;gap:14px;background:var(--tone-amber-bg);border:1px solid color-mix(in srgb,#E08A00 45%,transparent);color:var(--text);
             border-radius:10px;padding:14px 16px;margin-bottom:20px;}
-        .perfil-lock-notice > i{font-size:22px;color:#b8860b;flex-shrink:0;}
+        .perfil-lock-notice > i{font-size:22px;color:var(--tone-amber-ink);flex-shrink:0;}
         .perfil-lock-notice > div{flex:1;}
         .perfil-lock-notice .btn{flex-shrink:0;white-space:nowrap;}
         .form-group input:disabled, .form-group select:disabled{background:#f2f2f2;color:#666;cursor:not-allowed;}
@@ -100,15 +101,16 @@
                 <h3 style="margin-top:0;"><i class="fa-solid fa-user-shield"></i> Mis solicitudes de corrección de datos</h3>
                 <p class="text-muted" style="margin-top:-6px;">Solo un administrador puede aprobarlas o rechazarlas. Aquí solo consultas su estado.</p>
                 <div class="table-wrap"><table>
-                    <thead><tr><th>Datos de</th><th>Campo</th><th>Valor propuesto</th><th>Estado</th><th>Fecha</th></tr></thead>
+                    <thead><tr><th>Datos de</th><th>Campo</th><th>Valor propuesto</th><th>Estado</th><th>Fecha</th><th>Respuesta del administrador</th></tr></thead>
                     <tbody>
                         {% for c in mis_correcciones %}
                         <tr>
                             <td>{{ c.usuario.nombre|default:"—" }}</td>
-                            <td>{{ c.get_campo_display }}</td>
+                            <td>{{ c.campo|campo_legible }}</td>
                             <td><strong>{{ c.valor_nuevo }}</strong></td>
                             <td><span class="badge estado-{{ c.estado }}">{{ c.estado }}</span></td>
                             <td>{{ c.fecha_solicitud|date:"d/m/Y"|default:"—" }}</td>
+                            <td class="td-wrap">{% if c.observacion_resolucion %}{% if c.estado == 'rechazada' %}<strong>Motivo del rechazo:</strong> {% endif %}{{ c.observacion_resolucion }}{% elif c.estado == 'rechazada' %}<span class="text-muted">El administrador no registró un motivo.</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -152,10 +154,10 @@
                             <td>{{ cli.telefono }}</td>
                             <td class="necesidad-cell">{{ cli.necesidad|default:"—" }}</td>
                             <td>
-                                {% if cli.prioridad == 'urgente' %}<span style="color:#7d3c98;font-weight:700;">🟣 Urgente</span>
-                                {% elif cli.prioridad == 'alta' %}<span style="color:#c0392b;font-weight:700;">🔴 Alta</span>
-                                {% elif cli.prioridad == 'media' %}<span style="color:#d68910;font-weight:700;">🟡 Media</span>
-                                {% elif cli.prioridad == 'baja' %}<span style="color:#1e8449;font-weight:700;">🟢 Baja</span>
+                                {% if cli.prioridad == 'urgente' %}<span class="prio prio-urgente">🟣 Urgente</span>
+                                {% elif cli.prioridad == 'alta' %}<span class="prio prio-alta">🔴 Alta</span>
+                                {% elif cli.prioridad == 'media' %}<span class="prio prio-media">🟡 Media</span>
+                                {% elif cli.prioridad == 'baja' %}<span class="prio prio-baja">🟢 Baja</span>
                                 {% else %}—{% endif %}
                             </td>
                             <td><span class="badge estado-{{ cli.estado }}">{{ cli.estado }}</span></td>
@@ -560,6 +562,7 @@
     })();
 </script>
 <script src="{% static 'assets/js/asistente.js' %}"></script>
+<script src="{% static 'assets/js/gestion_detalle.js' %}"></script>
 <script src="{% static 'assets/js/asistente_extra.js' %}"></script>
 <script src="{% static 'assets/js/validaciones.js' %}"></script>
 {% endblock %}

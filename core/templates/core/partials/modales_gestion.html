@@ -136,3 +136,12 @@
         </div>
     </form>
 </div></div>
+
+{# Detalle de solo lectura (stock, donaciones/solicitudes y visitas): muestra el texto completo #}
+<div id="modalDetalleGeneral" class="modal" role="dialog" aria-modal="true" aria-labelledby="dg_titulo"><div class="modal-content">
+    <div class="modal-header"><h3 id="dg_titulo"></h3>
+        <button type="button" class="modal-close" aria-label="Cerrar" onclick="cerrarModal('modalDetalleGeneral')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+    <div id="dg_cuerpo"></div>
+    <p id="dg_nota" class="text-muted detalle-nota" hidden></p>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="cerrarModal('modalDetalleGeneral')">Cerrar</button></div>
+</div></div>

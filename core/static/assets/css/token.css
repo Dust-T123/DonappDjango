@@ -8,9 +8,9 @@
          align-items: center;
          justify-content: center;
          min-height: 100vh;
-         background-color: #f8f9fa;
+         background-color: var(--ds-raised);
          margin: 0;
-         font-family: 'DM Sans', sans-serif;
+         font-family: var(--ds-font);
          overflow: hidden;
          position: relative;
      }
@@ -44,7 +44,7 @@
      }
      
      .recover-card {
-         background: #ffffff;
+         background: var(--white);
          border-radius: 16px;
          padding: 40px;
          max-width: 420px;
@@ -60,8 +60,8 @@
      }
      
      .msg-ok {
-         color: #2e7d32;
-         background: #e8f5e9;
+         color: var(--tone-green-ink);
+         background: var(--tone-green-bg);
          border-radius: 8px;
          padding: 10px 14px;
          margin-bottom: 16px;
@@ -71,8 +71,8 @@
      }
      
      .msg-err {
-         color: #c62828;
-         background: #ffebee;
+         color: var(--tone-red-ink);
+         background: var(--tone-red-bg);
          border-radius: 8px;
          padding: 10px 14px;
          margin-bottom: 16px;
@@ -89,7 +89,7 @@
          display: block;
          margin-bottom: 8px;
          font-weight: 600;
-         color: #333;
+         color: var(--text);
      }
      
      .form-input {

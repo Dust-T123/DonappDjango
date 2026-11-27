@@ -103,6 +103,9 @@ def datos_gestion(request):
         .annotate(total_stock=Sum('stock'), num_donaciones=Count('id'))
         .order_by(*{'az': ('descripcion',), 'za': ('-descripcion',)}.get(g.get('inv_sort'), ('-total_stock', 'descripcion'))))
     total_unidades = sum(i['total_stock'] or 0 for i in inventario)
+    for i in inventario:
+        i['json'] = json.dumps({'articulo': i['descripcion'], 'categoria': i['categoria__nombre'] or '—',
+                                'cantidad': i['total_stock'] or 0, 'donaciones': i['num_donaciones']}, ensure_ascii=False)
 
     # Solicitudes
     solicitudes = Solicitud.objects.select_related('categoria', 'solicitante', 'gestor')
@@ -164,6 +167,13 @@ def datos_gestion(request):
         v.json = json.dumps({
             'idVisita': v.id, 'estado': v.estado, 'usuario': v.usuario.nombre if v.usuario else None,
             'editable': v.editable,
+            # información completa para el detalle (el texto largo se recorta en la tabla)
+            'direccion': v.direccion, 'motivo': v.motivo, 'observacion': v.observacion or '',
+            'fechaPreferida': v.fecha_preferida.strftime('%d/%m/%Y') if v.fecha_preferida else None,
+            'fechaSolicitud': timezone.localtime(v.fecha_solicitud).strftime('%d/%m/%Y %H:%M'),
+            'fechaResolucion': (timezone.localtime(v.fecha_resolucion).strftime('%d/%m/%Y %H:%M')
+                                if v.fecha_resolucion else None),
+            'gestor': v.gestor.nombre if v.gestor else None,
             'historial': [{'autor': h.usuario.nombre if h.usuario else 'Sistema', 'texto': h.texto,
                            'fecha': timezone.localtime(h.fecha).strftime('%d/%m/%Y %H:%M')} for h in notas],
         }, ensure_ascii=False)
